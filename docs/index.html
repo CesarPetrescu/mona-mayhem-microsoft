@@ -217,7 +217,8 @@
 
             try {
                 return normalizeTrack(localStorage.getItem(TRACK_STORAGE_KEY));
-            } catch {
+            } catch (error) {
+                console.warn('Unable to read saved workshop track preference.', error);
                 return 'vscode';
             }
         }
@@ -225,8 +226,8 @@
         function persistTrack(track) {
             try {
                 localStorage.setItem(TRACK_STORAGE_KEY, track);
-            } catch {
-                // Ignore storage failures.
+            } catch (error) {
+                console.warn('Unable to persist workshop track preference.', error);
             }
         }
 
