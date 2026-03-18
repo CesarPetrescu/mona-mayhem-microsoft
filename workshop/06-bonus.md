@@ -2,7 +2,15 @@
 
 ---
 
-You've built a fully functional GitHub Battle app! Now it's time to push further with **open-ended challenges**. Use **Agent Mode** for all of these — describe what you want, and let Copilot help you build it.
+You've built a fully functional GitHub Battle app! Now it's time to push further with **open-ended challenges**.
+
+<!-- track:vscode:start -->
+Use **Agent Mode** for all of these — describe what you want, and let Copilot help you build it.
+<!-- track:vscode:end -->
+
+<!-- track:cli:start -->
+Use Copilot CLI for all of these — mix `@file` context, `/plan`, normal mode, and `/review` as needed.
+<!-- track:cli:end -->
 
 ---
 
@@ -16,7 +24,7 @@ After both contribution graphs load, compare the totals and display a dynamic wi
 - Show **"🤝 IT'S A TIE! 🤝"** if contributions are equal
 - Add animation or confetti for extra flair
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > After both users' contribution data loads, compare total contributions and display a winner banner. Show "🏆 {username} WINS! 🏆" if one user has more contributions, or "🤝 IT'S A TIE! 🤝" if equal. Make it visually exciting with CSS animations.
 
 ---
@@ -31,7 +39,7 @@ Calculate and display each user's longest consecutive contribution streak.
 - Display the streak count prominently for each user
 - Highlight who has the longer streak
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > Add a streak counter feature that analyzes each user's contribution data to find their longest consecutive contribution streak. Display "🔥 Longest Streak: X days" for each user below their contribution graph.
 
 ---
@@ -46,7 +54,7 @@ Persist battle results so users can see their previous matchups.
 - Show the last 5–10 battles with results
 - Add a "Clear History" button
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > Save battle results to localStorage after each comparison. Add a "Recent Battles" section that displays the last 10 battles with usernames, contribution totals, the winner, and when the battle happened. Include a "Clear History" button.
 
 ---
@@ -61,7 +69,7 @@ Add retro arcade sound effects using the Web Audio API — no external files nee
 - **Explosion** sound when an error occurs (user not found, API failure)
 - A mute/unmute toggle button
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > Add retro arcade sound effects using the Web Audio API (no audio files). Play a coin insert sound on battle start, a power-up sound when results load, and an explosion sound on errors. Generate the sounds programmatically with oscillators and gain nodes. Include a mute toggle.
 
 ---
@@ -76,7 +84,7 @@ Build suspense with a dramatic countdown before revealing results.
 - Then reveal the contribution graphs with a dramatic entrance
 - Use CSS animations or JavaScript timing
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > Add an animated battle sequence when the user clicks "Battle!". Show a countdown overlay: "3..." then "2..." then "1..." then "⚡ FIGHT! ⚡" with each step lasting about 1 second. After the countdown, reveal the results with a slide-in animation.
 
 ---
@@ -91,7 +99,7 @@ Add a color scale legend that matches the contribution graph's color palette.
 - Use the actual color palette from the GitHub contribution API response
 - Position it near the contribution graphs
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > Add a contribution legend below the graphs showing the color scale from the API's color palette. Display a row of colored squares ranging from "Less" (lightest) to "More" (darkest), matching the actual contribution level colors returned by the API.
 
 ---
@@ -106,10 +114,20 @@ Let users share their battle results with a single click.
 - Include usernames, contribution totals, and the winner
 - Show a brief "Copied!" confirmation message
 
-**Agent Mode prompt suggestion:**
+**Prompt suggestion:**
 > Add a "📋 Share Results" button that copies a formatted battle summary to the clipboard. The summary should include both usernames, their contribution totals, and who won. Use the Clipboard API and show a brief "Copied to clipboard!" confirmation.
 
 ---
+
+<!-- track:cli:start -->
+## 💻 CLI Extras
+
+If you want to explore more of Copilot CLI's feature set after the core workshop:
+
+- Use `copilot -sp "Write a conventional commit message for the current git diff"` to generate a one-shot, response-only answer you can paste into Git.
+- Run `/share file` to save your session as Markdown for later reference.
+- Use `/session` and `/session plan` to inspect how the CLI is tracking your current work.
+<!-- track:cli:end -->
 
 ## 🎊 Congratulations!
 
@@ -124,20 +142,21 @@ You've completed the **Mona Mayhem: GitHub Battle** workshop! Here's what you ac
 - ✅ **Error handling, loading states, and accessibility** improvements
 - ✅ **Responsive design** that works across devices
 
-### What You Learned
+### What You Practiced
 
 | Skill | What You Practiced |
 |---|---|
-| **Context Engineering** | Providing Copilot with design specs, reference files, and clear constraints to get better results |
-| **Plan Mode** | Using Copilot to analyze requirements and generate step-by-step implementation plans before writing code |
-| **Agent Mode** | Delegating multi-file, multi-step tasks to Copilot and iterating on the results |
-| **Design-First Development** | Starting from a visual specification and translating it into working code with AI assistance |
-| **Multi-Agent Workflows** | Combining Plan Mode for strategy with Agent Mode for execution across different phases of development |
+| **Context Engineering** | Giving Copilot the right files, instructions, and constraints |
+| **Planning** | Generating and refining implementation plans before coding |
+| **Agentic Coding** | Delegating multi-file, multi-step work to Copilot |
+| **Design Iteration** | Starting from a visual direction and refining toward a polished result |
+| **Review Discipline** | Inspecting AI-generated changes before you commit them |
 
 ### 🚀 Keep Going
 
 - 📺 [VS Code YouTube Channel](https://www.youtube.com/@code) — Tips, tutorials, and what's new
 - 📖 [GitHub Copilot Documentation](https://docs.github.com/en/copilot) — Official docs and guides
+- 💻 [GitHub Copilot CLI Docs](https://docs.github.com/en/copilot/how-tos/copilot-cli) — Installation, slash commands, and best practices
 - 🌟 [Awesome GitHub Copilot](https://github.com/stefanprodan/awesome-github-copilot) — Community resources and examples
 - 🛠️ [Copilot Dev Days Workshops](https://github.com/github/copilot-dev-days) — More hands-on workshops like this one
 

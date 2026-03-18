@@ -1,14 +1,21 @@
-# Part 3: Agent Mode — Build the Game
+# Part 3: Build the Game with Agentic Workflows
 
 ---
 
-Agent Mode lets Copilot autonomously plan and implement changes across multiple files. Instead of writing code line by line, you describe what you want and Copilot figures out which files to create or modify, then implements everything end to end.
+This part is where Copilot goes from planner to implementer. Instead of writing code line by line, you describe what you want and let Copilot carry out the work across the files it needs to change.
 
 ## Task 1: Wire Up the Battle
 
-1. Switch to **Agent** mode in Copilot Chat (select "Agent" from the mode dropdown).
-
+<!-- track:vscode:start -->
+1. Switch to **Agent** mode in Copilot Chat.
 2. Enter this prompt:
+<!-- track:vscode:end -->
+
+<!-- track:cli:start -->
+1. Return Copilot CLI to its standard coding flow (or stay in autopilot if you want Copilot to keep moving until you stop it).
+2. Mention the page file for extra context if helpful: `@src/pages/index.astro`
+3. Enter this prompt:
+<!-- track:cli:end -->
 
    > Add client-side JavaScript to the battle page that:
    > 1. When the Battle button is clicked, gets both usernames from the inputs
@@ -22,9 +29,15 @@ Agent Mode lets Copilot autonomously plan and implement changes across multiple 
    >
    > Use TypeScript interfaces for the contribution data structure.
 
-3. Let Agent Mode work through the implementation across `index.astro`. Watch as it plans its approach, identifies the files it needs to touch, and writes the code.
-
+<!-- track:vscode:start -->
+3. Let Agent Mode work through the implementation across `index.astro`.
 4. Review the proposed changes in the diff view before accepting them.
+<!-- track:vscode:end -->
+
+<!-- track:cli:start -->
+4. Let Copilot CLI work through the implementation across `src/pages/index.astro`.
+5. Use `/diff` to inspect the generated changes, then approve them.
+<!-- track:cli:end -->
 
 ## Task 2: Test the Battle
 
@@ -35,27 +48,33 @@ Agent Mode lets Copilot autonomously plan and implement changes across multiple 
    - Enter an invalid username — the app should display an error from the API.
 4. Test pressing **Enter** in either input field — it should trigger the battle just like clicking the button.
 
-## Task 3: Iterate with Agent
+## Task 3: Iterate with Copilot
 
-If anything isn't quite right, give Agent feedback directly in the chat. For example:
+If anything isn't quite right, give Copilot follow-up feedback directly. For example:
 
 - *"The contribution squares are too large, make them 12x12px"*
 - *"Add a hover tooltip showing the date and contribution count"*
 - *"The loading state needs a pulse animation"*
 
-Agent Mode handles multi-file changes and iterations naturally. Each follow-up prompt builds on the previous context, so you can refine the implementation incrementally without starting over.
+<!-- track:vscode:start -->
+Agent Mode handles multi-file changes and iterations naturally. Each follow-up prompt builds on the previous conversation, so you can refine the implementation incrementally without starting over.
+<!-- track:vscode:end -->
 
-## Tips for Agent Mode
+<!-- track:cli:start -->
+Copilot CLI sessions keep their history, so each follow-up prompt builds on the last one. Use `/session` or `/context` if you want to inspect what Copilot is carrying forward, and `/review` after a larger iteration if you want an extra pass for bugs or polish.
+<!-- track:cli:end -->
+
+## Tips for This Part
 
 - **Be specific about what you want** — clear requirements lead to better results.
-- **Break down large tasks into smaller prompts** if Agent goes off track.
-- **Review changes before accepting** — use the diff view to understand what was modified.
-- **If results aren't perfect, provide feedback and iterate** — Agent learns from your corrections within the conversation.
+- **Break down large tasks into smaller prompts** if Copilot goes off track.
+- **Review changes before accepting** — generated code is faster to inspect than to rewrite later.
+- **Test the app immediately after each implementation pass** so issues stay localized.
 
 ## ✅ Part 3 Complete
 
 You've learned how to:
 
-- Use **Agent Mode** for complex, multi-file implementations
-- **Iterate on results** with targeted feedback
-- Handle the **full feature lifecycle** — from implementation to testing to refinement — in a single conversation
+- Use Copilot for **multi-file implementation work**
+- **Iterate on results** with focused follow-up prompts
+- Handle the **full feature loop** — implementation, review, testing, and refinement
