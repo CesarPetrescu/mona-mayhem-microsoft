@@ -9,19 +9,29 @@ In this part you'll set up your development environment **and** teach Copilot ab
 ### Step 1: Create Your Repository
 
 1. Open [github.com/copilot-dev-days/mona-mayhem](https://github.com/copilot-dev-days/mona-mayhem)
-2. Click **Use this template** → **Create a new repository**
-3. Name it `my-mona-mayhem` and set visibility to **Public**
+2. Create your own repository by either:
+   - clicking **Use this template** → **Create a new repository**, or
+   - forking the repository.
+3. Name it `my-mona-mayhem` and set visibility to **Public** (if you created from template)
 
 ### Step 2: Enable GitHub Pages
 
 1. Go to your new repository's **Settings** → **Pages**
 2. Under **Source**, select **GitHub Actions**
 
-### Step 3: Clone & Open in VS Code
+### Step 3: Choose Your Development Environment
+
+#### Option A: Local VS Code
 
 1. Open VS Code and run **Git: Clone** → **Clone from GitHub**
 2. Select your `my-mona-mayhem` repository
 3. When prompted, install the **recommended extensions**
+
+#### Option B: GitHub Codespaces
+
+1. Open your repository on GitHub
+2. Click **Code** → **Codespaces** → **Create codespace on main**
+3. Wait for the environment to boot and dependencies to install
 
 ### Step 4: Run the Setup Agent
 

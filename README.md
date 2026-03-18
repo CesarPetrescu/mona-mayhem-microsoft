@@ -20,8 +20,12 @@ A retro arcade-themed website built with Astro that allows comparing the GitHub 
 
 ## 🚀 Quick Start
 
-1. **Use this template** → Create a new repository
-2. Clone and open in VS Code
+1. **Create your own repo first** by either:
+   - clicking **Use this template** to create a new repo, or
+   - forking this repository.
+2. Choose one development path:
+   - **Local VS Code:** clone your repo and open it in VS Code.
+   - **GitHub Codespaces:** open your repo in a Codespace.
 3. Open the Chat panel and type `/setup`
 4. Follow the [workshop guide](workshop/00-overview.md)
 
