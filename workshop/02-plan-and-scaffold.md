@@ -69,8 +69,7 @@ Before writing any code, let's use Copilot's planning workflows to think through
    ```
    Now I need the main page. Plan a battle page for "Mona Mayhem - GitHub
    Contribution Battle Arena" with: two username inputs (Player 1 and Player 2),
-   a battle button, and a results area. Use a dark theme with the Press Start 2P
-   retro gaming font from Google Fonts. Keep the UI simple — don't over-engineer
+   a battle button, and a results area. Keep the UI simple — don't over-engineer
    the layout or styling at this stage. Plan the HTML structure, basic styling,
    and how the battle interaction will work.
    ```
