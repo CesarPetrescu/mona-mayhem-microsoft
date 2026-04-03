@@ -1547,7 +1547,22 @@
 								}
 							}
 
-							if (p.alive && (p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20)) p.alive = false;
+							// Hit stick figures when projectiles reach opposing edge
+							if (p.alive) {
+								if (p.side === 'left' && p.x > W * 0.75) {
+									if (figureR) figureR.applyHit(8);
+									explode(p.x, p.y, p.color, 4);
+									p.alive = false;
+									playImpactSound();
+								} else if (p.side === 'right' && p.x < W * 0.25) {
+									if (figureL) figureL.applyHit(-8);
+									explode(p.x, p.y, p.color, 4);
+									p.alive = false;
+									playImpactSound();
+								} else if (p.x < -20 || p.x > W + 20 || p.y < -20 || p.y > H + 20) {
+									p.alive = false;
+								}
+							}
 
 							if (p.alive) {
 								for (let t = 0; t < p.trail.length; t++) {
@@ -1597,6 +1612,11 @@
 									const li = winSide === 'left' ? 1 : 0, wi = winSide === 'left' ? 0 : 1;
 									cards[li].classList.add('cracked');
 									cards[wi].classList.add('winner-flash');
+									// Final stick figure states
+									const winFig = winSide === 'left' ? figureL : figureR;
+									const loseFig = winSide === 'left' ? figureR : figureL;
+									if (winFig) winFig.setVictory();
+									if (loseFig) { loseFig.hp = 0; loseFig.state = 'ko'; }
 								}
 								setTimeout(() => {
 									battleCanvas.classList.add('hidden');
