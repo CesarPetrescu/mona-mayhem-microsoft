@@ -595,6 +595,43 @@
 				color: #fff;
 			}
 
+			/* ── Battle Canvas ─────────────────────────────────────────── */
+			#battle-result {
+				position: relative;
+			}
+
+			#battle-canvas {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 50;
+				pointer-events: none;
+			}
+
+			.player-card.cracked {
+				animation: cardCrack 0.4s ease-out forwards;
+				border-color: var(--accent-error) !important;
+			}
+
+			@keyframes cardCrack {
+				0% { transform: scale(1); filter: brightness(1); }
+				30% { transform: scale(0.96) rotate(-1deg); filter: brightness(2.5); }
+				60% { transform: scale(0.98) rotate(0.5deg); filter: brightness(0.4); }
+				100% { transform: scale(1); filter: brightness(0.5); opacity: 0.5; }
+			}
+
+			.player-card.winner-flash {
+				animation: winnerFlash 0.6s ease-out forwards;
+			}
+
+			@keyframes winnerFlash {
+				0% { filter: brightness(1); }
+				40% { filter: brightness(2); box-shadow: 0 0 40px var(--accent-1); }
+				100% { filter: brightness(1); box-shadow: 0 0 20px rgba(95, 237, 131, 0.3); }
+			}
+
 			/* ── Utility ───────────────────────────────────────────────── */
 			.hidden { display: none !important; }
 
@@ -671,6 +708,7 @@
 			</form>
 
 			<section id="battle-result" aria-live="polite">
+				<canvas id="battle-canvas" class="hidden"></canvas>
 				<div id="status" class="hidden"></div>
 				<div id="arena" class="hidden"></div>
 				<div id="winner-banner" class="hidden"></div>
