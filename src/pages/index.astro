@@ -101,20 +101,145 @@
 				100% { background-position: -200% 0; }
 			}
 
-			/* ── CRT Scanline Effect ───────────────────────────────────── */
-			body::after {
+			/* ── CRT Monitor Frame ─────────────────────────────────────── */
+			.crt-monitor {
+				position: relative;
+				background: #1a1a1a;
+				border-radius: 24px;
+				padding: 22px 22px 12px;
+				box-shadow:
+					0 0 0 3px #0d0d0d,
+					0 0 0 6px #2a2a2a,
+					0 8px 40px rgba(0, 0, 0, 0.8),
+					inset 0 2px 4px rgba(255, 255, 255, 0.05);
+				max-width: 960px;
+				width: 100%;
+			}
+
+			/* Monitor brand label */
+			.crt-brand {
+				text-align: center;
+				font-family: var(--font-retro);
+				font-size: 0.4rem;
+				color: #555;
+				letter-spacing: 4px;
+				text-transform: uppercase;
+				padding: 8px 0 4px;
+			}
+
+			.crt-led {
+				display: inline-block;
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: var(--accent-1);
+				box-shadow: 0 0 6px var(--accent-1);
+				margin-left: 8px;
+				vertical-align: middle;
+				animation: neonPulse 3s ease-in-out infinite;
+			}
+
+			/* The curved glass screen */
+			.crt-screen {
+				position: relative;
+				border-radius: 16px / 18px;
+				overflow: hidden;
+				background: var(--bg);
+			}
+
+			/* Scanlines */
+			.crt-screen::before {
 				content: '';
-				position: fixed;
+				position: absolute;
 				inset: 0;
 				background: repeating-linear-gradient(
 					0deg,
 					transparent,
 					transparent 2px,
-					rgba(0, 0, 0, 0.08) 2px,
-					rgba(0, 0, 0, 0.08) 4px
+					rgba(0, 0, 0, 0.06) 2px,
+					rgba(0, 0, 0, 0.06) 4px
+				);
+				pointer-events: none;
+				z-index: 9998;
+				border-radius: inherit;
+			}
+
+			/* Vignette + lens curvature darkening at edges */
+			.crt-screen::after {
+				content: '';
+				position: absolute;
+				inset: 0;
+				background: radial-gradient(
+					ellipse 85% 80% at 50% 50%,
+					transparent 55%,
+					rgba(0, 0, 0, 0.35) 80%,
+					rgba(0, 0, 0, 0.7) 100%
 				);
 				pointer-events: none;
 				z-index: 9999;
+				border-radius: inherit;
+			}
+
+			/* Chromatic aberration overlay */
+			.crt-aberration {
+				position: absolute;
+				inset: 0;
+				pointer-events: none;
+				z-index: 9997;
+				border-radius: inherit;
+				/* Red shift left edge, cyan shift right edge */
+				box-shadow:
+					inset 3px 0 8px -4px rgba(255, 0, 50, 0.15),
+					inset -3px 0 8px -4px rgba(0, 200, 255, 0.15),
+					inset 0 3px 8px -4px rgba(255, 0, 50, 0.08),
+					inset 0 -3px 8px -4px rgba(0, 200, 255, 0.08);
+			}
+
+			/* Glass reflection glare */
+			.crt-glare {
+				position: absolute;
+				top: 5%;
+				left: 10%;
+				width: 35%;
+				height: 25%;
+				background: linear-gradient(
+					135deg,
+					rgba(255, 255, 255, 0.06) 0%,
+					rgba(255, 255, 255, 0.02) 40%,
+					transparent 100%
+				);
+				border-radius: 50%;
+				pointer-events: none;
+				z-index: 9999;
+				filter: blur(8px);
+			}
+
+			/* RGB sub-pixel texture (very subtle) */
+			.crt-rgb {
+				position: absolute;
+				inset: 0;
+				background: repeating-linear-gradient(
+					90deg,
+					rgba(255, 0, 0, 0.015) 0px,
+					rgba(0, 255, 0, 0.015) 1px,
+					rgba(0, 100, 255, 0.015) 2px,
+					transparent 3px
+				);
+				pointer-events: none;
+				z-index: 9997;
+				border-radius: inherit;
+			}
+
+			/* Screen flicker */
+			@keyframes crtFlicker {
+				0%, 100% { opacity: 1; }
+				92% { opacity: 1; }
+				93% { opacity: 0.97; }
+				94% { opacity: 1; }
+			}
+
+			.crt-screen > .container {
+				animation: crtFlicker 8s linear infinite;
 			}
 
 			/* ── Base Styles ───────────────────────────────────────────── */
@@ -123,8 +248,8 @@
 			body {
 				font-family: var(--font-retro);
 				margin: 0;
-				padding: 1.5rem;
-				background: var(--bg);
+				padding: 2rem 1rem;
+				background: #050510;
 				color: var(--text);
 				display: grid;
 				place-items: center;
@@ -133,11 +258,9 @@
 			}
 
 			.container {
-				width: min(900px, 100%);
+				width: 100%;
 				padding: 1.5rem;
-				border-radius: 10px;
-				background: var(--bg-card);
-				border: 1px solid var(--bg-card-border);
+				background: var(--bg);
 				position: relative;
 			}
 
@@ -683,45 +806,53 @@
 		</style>
 	</head>
 	<body>
-		<main class="container">
-			<div class="controls">
-				<button id="theme-toggle" class="control-btn" aria-label="Toggle color theme" title="Switch color theme">Theme</button>
-				<button id="mute-toggle" class="control-btn" aria-label="Toggle sound" title="Toggle sound effects">Sound: ON</button>
+		<div class="crt-monitor">
+			<div class="crt-screen">
+				<div class="crt-aberration"></div>
+				<div class="crt-rgb"></div>
+				<div class="crt-glare"></div>
+				<main class="container">
+					<div class="controls">
+						<button id="theme-toggle" class="control-btn" aria-label="Toggle color theme" title="Switch color theme">Theme</button>
+						<button id="mute-toggle" class="control-btn" aria-label="Toggle sound" title="Toggle sound effects">Sound: ON</button>
+					</div>
+
+					<h1>Mona Mayhem</h1>
+					<p class="subtitle">GitHub Contribution Battle Arena</p>
+
+					<form id="battle-form">
+						<div class="field">
+							<label for="player1">Player 1</label>
+							<input id="player1" name="player1" placeholder="e.g. octocat" autocomplete="off" />
+							<span id="p1-error" class="error-msg"></span>
+						</div>
+						<div class="vs-badge">VS</div>
+						<div class="field">
+							<label for="player2">Player 2</label>
+							<input id="player2" name="player2" placeholder="e.g. mona" autocomplete="off" />
+							<span id="p2-error" class="error-msg"></span>
+						</div>
+						<button id="battle-btn" type="submit">Battle!</button>
+					</form>
+
+					<section id="battle-result" aria-live="polite">
+						<canvas id="battle-canvas" class="hidden"></canvas>
+						<div id="status" class="hidden"></div>
+						<div id="arena" class="hidden"></div>
+						<div id="winner-banner" class="hidden"></div>
+						<button id="share-btn" class="hidden">Share Results</button>
+						<div id="copy-confirm" class="copy-confirm hidden"></div>
+					</section>
+
+					<section id="battle-history" class="history-section hidden">
+						<h2 class="history-title">Recent Battles</h2>
+						<div id="history-list"></div>
+						<button id="clear-history-btn">Clear History</button>
+					</section>
+				</main>
 			</div>
-
-			<h1>Mona Mayhem</h1>
-			<p class="subtitle">GitHub Contribution Battle Arena</p>
-
-			<form id="battle-form">
-				<div class="field">
-					<label for="player1">Player 1</label>
-					<input id="player1" name="player1" placeholder="e.g. octocat" autocomplete="off" />
-					<span id="p1-error" class="error-msg"></span>
-				</div>
-				<div class="vs-badge">VS</div>
-				<div class="field">
-					<label for="player2">Player 2</label>
-					<input id="player2" name="player2" placeholder="e.g. mona" autocomplete="off" />
-					<span id="p2-error" class="error-msg"></span>
-				</div>
-				<button id="battle-btn" type="submit">Battle!</button>
-			</form>
-
-			<section id="battle-result" aria-live="polite">
-				<canvas id="battle-canvas" class="hidden"></canvas>
-				<div id="status" class="hidden"></div>
-				<div id="arena" class="hidden"></div>
-				<div id="winner-banner" class="hidden"></div>
-				<button id="share-btn" class="hidden">Share Results</button>
-				<div id="copy-confirm" class="copy-confirm hidden"></div>
-			</section>
-
-			<section id="battle-history" class="history-section hidden">
-				<h2 class="history-title">Recent Battles</h2>
-				<div id="history-list"></div>
-				<button id="clear-history-btn">Clear History</button>
-			</section>
-		</main>
+			<div class="crt-brand">Mona Mayhem<span class="crt-led"></span></div>
+		</div>
 
 		<div id="countdown-overlay" class="hidden"></div>
 
