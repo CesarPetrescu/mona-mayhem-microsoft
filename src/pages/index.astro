@@ -8,10 +8,267 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Mona Mayhem</title>
+		<title>Mona Mayhem - GitHub Contribution Battle Arena</title>
+		<style>
+			body {
+				font-family: Arial, Helvetica, sans-serif;
+				margin: 0;
+				padding: 1.5rem;
+				background: #f4f4f4;
+				color: #111827;
+				display: grid;
+				place-items: center;
+				min-height: 100vh;
+			}
+
+			.container {
+				width: min(760px, 100%);
+				padding: 1.5rem;
+				border-radius: 10px;
+				background: #ffffff;
+				border: 1px solid #d1d5db;
+				box-sizing: border-box;
+			}
+
+			h1 {
+				font-size: 1.6rem;
+				margin: 0 0 0.75rem;
+			}
+
+			p {
+				margin: 0 0 1rem;
+				color: #4b5563;
+			}
+
+			form {
+				display: grid;
+				gap: 0.9rem;
+			}
+
+			.field {
+				display: grid;
+				gap: 0.35rem;
+			}
+
+			label {
+				font-weight: 600;
+			}
+
+			input {
+				padding: 0.65rem 0.75rem;
+				border: 1px solid #d1d5db;
+				border-radius: 6px;
+				font-size: 1rem;
+			}
+
+			button {
+				padding: 0.65rem 0.75rem;
+				border: 0;
+				border-radius: 6px;
+				background: #111827;
+				color: #fff;
+				font-weight: 600;
+				cursor: pointer;
+			}
+
+			button:disabled {
+				background: #9ca3af;
+				cursor: not-allowed;
+			}
+
+			#battle-result {
+				margin-top: 1rem;
+				padding: 0.75rem;
+				border: 1px solid #d1d5db;
+				background: #f9fafb;
+				border-radius: 6px;
+			}
+
+			#status {
+				margin-bottom: 0.75rem;
+				font-weight: 600;
+			}
+
+			.card {
+				border: 1px solid #d1d5db;
+				border-radius: 6px;
+				padding: 0.75rem;
+				margin-top: 0.6rem;
+				background: #fff;
+			}
+
+			.card h2 {
+				margin: 0 0 0.35rem;
+				font-size: 1rem;
+			}
+
+			.name {
+				font-weight: 700;
+				display: inline-block;
+				margin-right: 0.5rem;
+			}
+
+			.small {
+				color: #4b5563;
+				font-size: 0.92rem;
+			}
+		</style>
 	</head>
 	<body>
-		<h1>Mona Mayhem</h1>
-		<p>Welcome to Mona Mayhem! Time to build a GitHub Contribution Battle Arena.</p>
+		<main class="container">
+			<h1>Mona Mayhem - GitHub Contribution Battle Arena</h1>
+			<p>Enter two GitHub usernames and start a quick contribution battle.</p>
+
+			<form id="battle-form">
+				<div class="field">
+					<label for="player1">Player 1</label>
+					<input id="player1" name="player1" placeholder="e.g. octocat" autocomplete="off" />
+				</div>
+				<div class="field">
+					<label for="player2">Player 2</label>
+					<input id="player2" name="player2" placeholder="e.g. mona" autocomplete="off" />
+				</div>
+				<button id="battle-btn" type="submit">Battle</button>
+			</form>
+
+			<section id="battle-result" aria-live="polite">
+				<div id="status" class="small"></div>
+				<div id="cards"></div>
+				<div id="result" class="small"></div>
+			</section>
+		</main>
+
+		<script type="module">
+			const USERNAME_RE = /^(?!-)(?!.*--)[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$/i;
+
+			const form = document.querySelector('#battle-form');
+			const button = document.querySelector('#battle-btn');
+			const statusEl = document.querySelector('#status');
+			const cardsEl = document.querySelector('#cards');
+			const resultEl = document.querySelector('#result');
+
+			const playerInput1 = document.querySelector('#player1');
+			const playerInput2 = document.querySelector('#player2');
+
+			function setStatus(message) {
+				statusEl.textContent = message;
+			}
+
+			function normalize(name) {
+				return (name || '').trim().toLowerCase();
+			}
+
+			function isValidUsername(name) {
+				return Boolean(name) && name.length <= 39 && USERNAME_RE.test(name);
+			}
+
+			function scoreFromPayload(payload) {
+				const raw = payload?.data;
+				if (!raw || typeof raw !== 'object') return 0;
+				return Number(raw.total_contributions || 0);
+			}
+
+			function cardFor(playerName, data, error) {
+				const total = error ? 'Unavailable' : `${data.total} contributions`;
+				return `
+					<div class="card">
+						<h2><span class="name">${playerName}</span> <span class="small">${error ? 'Error' : 'Ready'}</span></h2>
+						<div class="small">Total contributions: ${total}</div>
+						<div class="small">Cache status: ${error ? 'failed' : data.cacheStatus}</div>
+						<div class="small">Source: ${data.source}</div>
+					</div>
+				`;
+			}
+
+			async function fetchPlayer(username) {
+				const response = await fetch(`/api/contributions/${encodeURIComponent(username)}`);
+				const payload = await response.json();
+				if (!response.ok) {
+					const message = payload?.error?.message || `Request failed (${response.status})`;
+					throw new Error(message);
+				}
+				return {
+					username,
+					total: scoreFromPayload(payload),
+					cacheStatus: payload.cacheStatus || 'unknown',
+					source: payload.source || `https://github.com/${encodeURIComponent(username)}.contribs`,
+				};
+			}
+
+			function render(players) {
+				cardsEl.innerHTML = players.map((player) => {
+					if (player.error) {
+						return cardFor(player.username, { total: 0, cacheStatus: 'error', source: player.source }, true);
+					}
+					return cardFor(player.username, player, false);
+				}).join('');
+			}
+
+			function renderResult(players) {
+				const valid = players.filter((p) => !p.error);
+				if (valid.length < 2) {
+					if (valid.length === 1) {
+						resultEl.textContent = `${valid[0].username} wins by default; other player did not load.`;
+						return;
+					}
+					resultEl.textContent = 'No valid players loaded. Fix input and try again.';
+					return;
+				}
+
+				const [a, b] = valid;
+				if (a.total === b.total) {
+					resultEl.textContent = `It's a tie at ${a.total} contributions each.`;
+					return;
+				}
+
+				const winner = a.total > b.total ? a : b;
+				resultEl.textContent = `${winner.username} wins with ${winner.total} contributions.`;
+			}
+
+			form.addEventListener('submit', async (event) => {
+				event.preventDefault();
+				resultEl.textContent = '';
+				cardsEl.innerHTML = '';
+
+				const player1 = normalize(playerInput1.value);
+				const player2 = normalize(playerInput2.value);
+
+				if (!isValidUsername(player1) || !isValidUsername(player2)) {
+					setStatus('Both usernames must be valid GitHub usernames.');
+					button.disabled = false;
+					return;
+				}
+
+				setStatus('Fetching contribution data...');
+				button.disabled = true;
+				button.textContent = 'Battling...';
+
+				const players = [
+					{ username: player1 },
+					{ username: player2 },
+				];
+
+				const results = await Promise.allSettled(players.map((player) => fetchPlayer(player.username)));
+				const loaded = results.map((result, index) => {
+					if (result.status === 'fulfilled') {
+						return result.value;
+					}
+
+					return {
+						username: players[index].username,
+						error: true,
+						total: 0,
+						cacheStatus: 'error',
+						source: `/api/contributions/${encodeURIComponent(players[index].username)}`,
+					};
+				});
+
+				render(loaded);
+				renderResult(loaded);
+				setStatus('Battle complete.');
+				button.disabled = false;
+				button.textContent = 'Battle';
+			});
+		</script>
 	</body>
 </html>

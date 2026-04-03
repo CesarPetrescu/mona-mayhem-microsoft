@@ -3,22 +3,38 @@ dist/
 # generated types
 .astro/
 
+# local caches
+.astro-cache/
+.vite/
+.turbo/
+coverage/
+
 # dependencies
 node_modules/
+
+# temporary/system files
+*.swp
+*.swo
+*~
+.cache/
+.temp/
 
 # logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
+*.log
 
 # environment variables
 .env
 .env.production
+.env.local
+.env.*.local
 
 # macOS-specific files
 .DS_Store
+Thumbs.db
 
 # jetbrains setting folder
 .idea/
