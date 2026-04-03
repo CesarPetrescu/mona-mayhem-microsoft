@@ -471,6 +471,37 @@
 
 			form.shake { animation: shake 0.4s ease-in-out; }
 
+			/* ── Mode Picker ───────────────────────────────────────────── */
+			.mode-picker {
+				display: flex;
+				gap: 0.5rem;
+				margin-bottom: 0.6rem;
+				justify-content: center;
+			}
+
+			.mode-btn {
+				padding: 0.3rem 0.7rem;
+				border: 1px solid var(--panel-border);
+				border-radius: 3px;
+				background: transparent;
+				color: var(--text-dim);
+				font-family: var(--font-term);
+				font-size: 0.6rem;
+				cursor: pointer;
+				transition: all 0.2s;
+			}
+
+			.mode-btn.active {
+				border-color: var(--accent-1);
+				color: var(--accent-1);
+				background: rgba(51, 255, 102, 0.08);
+			}
+
+			.mode-btn:hover:not(.active) {
+				border-color: var(--text);
+				color: var(--text);
+			}
+
 			/* ── Focus ─────────────────────────────────────────────────── */
 			*:focus-visible {
 				outline: 1px solid var(--accent-1);
@@ -845,6 +876,10 @@
 									</div>
 									<div class="error-msg" id="p2-error"></div>
 								</div>
+							</div>
+							<div class="mode-picker">
+								<button type="button" class="mode-btn active" data-mode="cannon">commit cannon</button>
+								<button type="button" class="mode-btn" data-mode="pokemon">pokemon battle</button>
 							</div>
 							<button id="battle-btn" type="submit">[ execute battle ]</button>
 						</form>
@@ -1729,6 +1764,254 @@
 				}
 			});
 
+			// ── Mode Picker ───────────────────────────────────────────────
+			let battleMode = 'cannon';
+			const modeBtns = document.querySelectorAll('.mode-btn');
+			modeBtns.forEach(btn => {
+				btn.addEventListener('click', () => {
+					modeBtns.forEach(b => b.classList.remove('active'));
+					btn.classList.add('active');
+					battleMode = btn.dataset.mode;
+				});
+			});
+
+			// ── Pokemon Battle System ─────────────────────────────────────
+			const MOVES = [
+				{ name: 'COMMIT PUSH', type: 'normal' },
+				{ name: 'FORCE PUSH', type: 'fire' },
+				{ name: 'MERGE CONFLICT', type: 'chaos' },
+				{ name: 'REBASE ATTACK', type: 'psychic' },
+				{ name: 'PR SLAM', type: 'fighting' },
+			];
+
+			const TYPE_COLORS = {
+				normal: '#a8a878', fire: '#f08030', chaos: '#a855f7',
+				psychic: '#f85888', fighting: '#c03028',
+			};
+
+			function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+			async function runPokemonBattle(players) {
+				const [p1, p2] = players;
+				if (p1.error || p2.error) return;
+
+				stageCanvas.classList.remove('hidden');
+				const dpr = window.devicePixelRatio || 1;
+				const rect = stageCanvas.getBoundingClientRect();
+				stageCanvas.width = rect.width * dpr;
+				stageCanvas.height = rect.height * dpr;
+				stageCanvas.style.width = rect.width + 'px';
+				stageCanvas.style.height = rect.height + 'px';
+				sCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+				const W = rect.width, H = rect.height;
+
+				// HP
+				let hp1 = 100, hp2 = 100;
+				// Power ratio determines damage
+				const totalMax = Math.max(p1.total, p2.total, 1);
+				const pow1 = Math.max(8, Math.round((p1.total / totalMax) * 30));
+				const pow2 = Math.max(8, Math.round((p2.total / totalMax) * 30));
+
+				// Sprite positions (Pokemon-style: yours bottom-left, enemy top-right)
+				const spr1 = { x: W * 0.22, y: H * 0.65, scale: 1.2, shake: 0 };
+				const spr2 = { x: W * 0.78, y: H * 0.32, scale: 0.9, shake: 0 };
+				let flashTarget = null;
+				let flashTimer = 0;
+
+				// Draw a pixel character using contribution colors
+				function drawPixelChar(cx, cy, scale, colors, facing, isFlash) {
+					const s = 3 * scale;
+					const c = isFlash ? '#fff' : (colors[3] || '#33ff66');
+					const c2 = isFlash ? '#ddd' : (colors[2] || '#30a14e');
+					const c3 = isFlash ? '#bbb' : (colors[4] || '#216e39');
+					const skin = isFlash ? '#fff' : '#ffcc88';
+
+					sCtx.shadowColor = c;
+					sCtx.shadowBlur = isFlash ? 15 : 6;
+
+					// Head
+					sCtx.fillStyle = skin;
+					sCtx.fillRect(cx - s * 1.5, cy - s * 5, s * 3, s * 3);
+
+					// Eyes
+					sCtx.fillStyle = isFlash ? '#fff' : '#111';
+					const eyeOff = facing > 0 ? 0 : s;
+					sCtx.fillRect(cx - s + eyeOff, cy - s * 4, s * 0.8, s * 0.8);
+					sCtx.fillRect(cx + eyeOff, cy - s * 4, s * 0.8, s * 0.8);
+
+					// Body
+					sCtx.fillStyle = c;
+					sCtx.fillRect(cx - s * 2, cy - s * 2, s * 4, s * 3);
+
+					// Arms
+					sCtx.fillStyle = c2;
+					sCtx.fillRect(cx - s * 3, cy - s * 1.5, s, s * 2.5);
+					sCtx.fillRect(cx + s * 2, cy - s * 1.5, s, s * 2.5);
+
+					// Legs
+					sCtx.fillStyle = c3;
+					sCtx.fillRect(cx - s * 1.5, cy + s, s * 1.2, s * 2);
+					sCtx.fillRect(cx + s * 0.3, cy + s, s * 1.2, s * 2);
+
+					sCtx.shadowBlur = 0;
+				}
+
+				function drawHPBar(x, y, w, hp, name, total, align) {
+					// Name
+					sCtx.font = '10px "Share Tech Mono", monospace';
+					sCtx.textAlign = align;
+					sCtx.fillStyle = '#e0e0e0';
+					sCtx.fillText(name.toUpperCase(), align === 'left' ? x : x + w, y - 20);
+					sCtx.font = '8px "Share Tech Mono", monospace';
+					sCtx.fillStyle = '#888';
+					sCtx.fillText(`Lv.${Math.min(100, Math.ceil(total / 50))}`, align === 'left' ? x : x + w, y - 8);
+
+					// Bar bg
+					sCtx.fillStyle = '#222';
+					sCtx.strokeStyle = '#555';
+					sCtx.lineWidth = 1;
+					sCtx.beginPath();
+					sCtx.roundRect(x, y, w, 8, 2);
+					sCtx.fill();
+					sCtx.stroke();
+
+					// HP fill
+					const pct = Math.max(0, hp / 100);
+					const col = pct > 0.5 ? '#33ff66' : pct > 0.2 ? '#ffaa00' : '#ff3366';
+					sCtx.fillStyle = col;
+					sCtx.shadowColor = col;
+					sCtx.shadowBlur = 4;
+					sCtx.beginPath();
+					sCtx.roundRect(x + 1, y + 1, (w - 2) * pct, 6, 1);
+					sCtx.fill();
+					sCtx.shadowBlur = 0;
+
+					// HP text
+					sCtx.font = '7px "Share Tech Mono", monospace';
+					sCtx.textAlign = 'right';
+					sCtx.fillStyle = '#aaa';
+					sCtx.fillText(`${Math.ceil(hp)}/100`, x + w, y + 18);
+				}
+
+				function drawScene() {
+					// Background
+					sCtx.fillStyle = '#0a0a14';
+					sCtx.fillRect(0, 0, W, H);
+
+					// Ground platforms
+					sCtx.fillStyle = '#1a2a1a';
+					// Player 1 platform (bottom-left)
+					sCtx.beginPath();
+					sCtx.ellipse(spr1.x, spr1.y + 25, 50, 12, 0, 0, Math.PI * 2);
+					sCtx.fill();
+					// Player 2 platform (top-right)
+					sCtx.beginPath();
+					sCtx.ellipse(spr2.x, spr2.y + 20, 40, 10, 0, 0, Math.PI * 2);
+					sCtx.fill();
+
+					// Sprites
+					const s1flash = flashTarget === 1 && flashTimer % 4 < 2;
+					const s2flash = flashTarget === 2 && flashTimer % 4 < 2;
+
+					const s1x = spr1.x + (spr1.shake > 0 ? (Math.random() - 0.5) * 6 : 0);
+					const s2x = spr2.x + (spr2.shake > 0 ? (Math.random() - 0.5) * 6 : 0);
+
+					drawPixelChar(s2x, spr2.y, spr2.scale, p2.colors, -1, s2flash);
+					drawPixelChar(s1x, spr1.y, spr1.scale, p1.colors, 1, s1flash);
+
+					// HP bars
+					drawHPBar(W * 0.55, H * 0.08, W * 0.38, hp2, p2.username, p2.total, 'left');
+					drawHPBar(W * 0.07, H * 0.72, W * 0.38, hp1, p1.username, p1.total, 'left');
+
+					// Update shake
+					if (spr1.shake > 0) spr1.shake--;
+					if (spr2.shake > 0) spr2.shake--;
+					if (flashTimer > 0) flashTimer--;
+					else flashTarget = null;
+				}
+
+				// Animate HP drain smoothly
+				function animateHP(target, from, to, duration) {
+					return new Promise(resolve => {
+						const start = performance.now();
+						function tick(now) {
+							const t = Math.min(1, (now - start) / duration);
+							if (target === 1) hp1 = from + (to - from) * t;
+							else hp2 = from + (to - from) * t;
+							drawScene();
+							if (t < 1) requestAnimationFrame(tick);
+							else resolve();
+						}
+						requestAnimationFrame(tick);
+					});
+				}
+
+				// Initial appearance
+				drawScene();
+				await logStatus(`a wild ${p2.username} appeared!`);
+				await delay(600);
+				await logStatus(`${p1.username}, I choose you!`);
+				await delay(500);
+
+				// 5 turns
+				const turns = 5;
+				for (let turn = 0; turn < turns; turn++) {
+					if (hp1 <= 0 || hp2 <= 0) break;
+
+					const move1 = MOVES[turn % MOVES.length];
+					const move2 = MOVES[(turn + 2) % MOVES.length];
+
+					// Player 1 attacks
+					const dmg1 = pow1 + Math.floor(Math.random() * 8) - 3;
+					const crit1 = Math.random() < 0.15;
+					const actualDmg1 = crit1 ? Math.round(dmg1 * 1.5) : dmg1;
+
+					await logStatus(`${p1.username} used ${move1.name}!`);
+					spr2.shake = 12;
+					flashTarget = 2; flashTimer = 12;
+					playImpactSound();
+					const newHp2 = Math.max(0, hp2 - actualDmg1);
+					await animateHP(2, hp2, newHp2, 400);
+					hp2 = newHp2;
+					if (crit1) await logStatus('critical hit!');
+					await delay(300);
+
+					if (hp2 <= 0) break;
+
+					// Player 2 attacks
+					const dmg2 = pow2 + Math.floor(Math.random() * 8) - 3;
+					const crit2 = Math.random() < 0.15;
+					const actualDmg2 = crit2 ? Math.round(dmg2 * 1.5) : dmg2;
+
+					await logStatus(`${p2.username} used ${move2.name}!`);
+					spr1.shake = 12;
+					flashTarget = 1; flashTimer = 12;
+					playImpactSound();
+					const newHp1 = Math.max(0, hp1 - actualDmg2);
+					await animateHP(1, hp1, newHp1, 400);
+					hp1 = newHp1;
+					if (crit2) await logStatus('critical hit!');
+					await delay(300);
+				}
+
+				// Result
+				drawScene();
+				if (hp1 > hp2) {
+					await logStatus(`${p2.username} fainted!`);
+					await logStatus(`${p1.username} wins the battle!`);
+					playPowerUpSound();
+				} else if (hp2 > hp1) {
+					await logStatus(`${p1.username} fainted!`);
+					await logStatus(`${p2.username} wins the battle!`);
+					playPowerUpSound();
+				} else {
+					await logStatus('both pokemon fainted! it\'s a draw!');
+				}
+
+				await delay(500);
+			}
+
 			// ── Main Battle ───────────────────────────────────────────────
 			async function handleBattle() {
 				clearError(prompt1, error1);
@@ -1777,24 +2060,30 @@
 				await logStatus('data received. rendering combat zone...');
 				render(players);
 
-				// Init stick fighters
 				const bothOk = !players[0].error && !players[1].error;
-				if (bothOk) {
-					const c1 = players[0].colors[3] || '#33ff66';
-					const c2 = players[1].colors[3] || '#a855f7';
-					initFighters(c1, c2);
-					figureL.label = players[0].username;
-					figureR.label = players[1].username;
-				}
 
-				await logStatus('initiating commit cannon sequence...');
-				await runBattleAnimation(players);
+				if (battleMode === 'pokemon' && bothOk) {
+					await logStatus('entering pokemon battle mode...');
+					await runPokemonBattle(players);
+				} else {
+					// Commit Cannon mode
+					if (bothOk) {
+						const c1 = players[0].colors[3] || '#33ff66';
+						const c2 = players[1].colors[3] || '#a855f7';
+						initFighters(c1, c2);
+						figureL.label = players[0].username;
+						figureR.label = players[1].username;
+					}
+
+					await logStatus('initiating commit cannon sequence...');
+					await runBattleAnimation(players);
+				}
 
 				const anyErr = players.some(p => p.error);
 				if (anyErr) {
 					playErrorSound();
 					await logStatus('WARNING: one or more connections failed');
-				} else {
+				} else if (battleMode !== 'pokemon') {
 					playPowerUpSound();
 					const valid = players.filter(p => !p.error);
 					if (valid.length === 2) {
