@@ -10,34 +10,100 @@
 		<meta name="generator" content={Astro.generator} />
 		<title>Mona Mayhem - GitHub Contribution Battle Arena</title>
 		<style>
+			/* ── Default theme tokens ── */
+			:root {
+				--bg-page: #f4f4f4;
+				--bg-container: #ffffff;
+				--bg-result: #f9fafb;
+				--bg-card: #ffffff;
+				--bg-button: #111827;
+				--bg-button-disabled: #9ca3af;
+				--color-text: #111827;
+				--color-muted: #4b5563;
+				--color-button: #ffffff;
+				--border-color: #d1d5db;
+				--font-family: Arial, Helvetica, sans-serif;
+				--font-title: inherit;
+				--glow-accent: transparent;
+				--glow-title: none;
+				--border-radius: 6px;
+				--container-radius: 10px;
+			}
+
+			/* ── Retro arcade blue/orange theme ── */
+			:root.theme-retro {
+				--bg-page: #0a0a1a;
+				--bg-container: #0d0d2b;
+				--bg-result: #060614;
+				--bg-card: #0f0f30;
+				--bg-button: #ff6b35;
+				--bg-button-disabled: #7a3318;
+				--color-text: #00f5ff;
+				--color-muted: #a0e8ef;
+				--color-button: #0a0a1a;
+				--border-color: #00f5ff;
+				--font-family: 'Courier New', Courier, monospace;
+				--font-title: 'Courier New', Courier, monospace;
+				--glow-accent: #00f5ff;
+				--glow-title: 0 0 8px #00f5ff, 0 0 20px #00f5ff66;
+				--border-radius: 0px;
+				--container-radius: 0px;
+			}
+
 			body {
-				font-family: Arial, Helvetica, sans-serif;
+				font-family: var(--font-family);
 				margin: 0;
 				padding: 1.5rem;
-				background: #f4f4f4;
-				color: #111827;
+				background: var(--bg-page);
+				color: var(--color-text);
 				display: grid;
 				place-items: center;
 				min-height: 100vh;
+				transition: background 0.3s, color 0.3s;
 			}
 
 			.container {
 				width: min(760px, 100%);
 				padding: 1.5rem;
-				border-radius: 10px;
-				background: #ffffff;
-				border: 1px solid #d1d5db;
+				border-radius: var(--container-radius);
+				background: var(--bg-container);
+				border: 1px solid var(--border-color);
 				box-sizing: border-box;
+				transition: background 0.3s, border-color 0.3s;
+			}
+
+			/* Retro scanline overlay */
+			:root.theme-retro .container::before {
+				content: '';
+				position: fixed;
+				inset: 0;
+				background: repeating-linear-gradient(
+					0deg,
+					transparent,
+					transparent 2px,
+					rgba(0, 245, 255, 0.03) 2px,
+					rgba(0, 245, 255, 0.03) 4px
+				);
+				pointer-events: none;
+				z-index: 0;
+			}
+
+			:root.theme-retro .container > * {
+				position: relative;
+				z-index: 1;
 			}
 
 			h1 {
 				font-size: 1.6rem;
 				margin: 0 0 0.75rem;
+				font-family: var(--font-title);
+				text-shadow: var(--glow-title);
+				transition: text-shadow 0.3s;
 			}
 
 			p {
 				margin: 0 0 1rem;
-				color: #4b5563;
+				color: var(--color-muted);
 			}
 
 			form {
@@ -52,36 +118,53 @@
 
 			label {
 				font-weight: 600;
+				color: var(--color-text);
 			}
 
 			input {
 				padding: 0.65rem 0.75rem;
-				border: 1px solid #d1d5db;
-				border-radius: 6px;
+				border: 1px solid var(--border-color);
+				border-radius: var(--border-radius);
 				font-size: 1rem;
+				background: var(--bg-card);
+				color: var(--color-text);
+				font-family: var(--font-family);
+				outline: none;
+				transition: background 0.3s, border-color 0.3s, color 0.3s;
+			}
+
+			:root.theme-retro input:focus {
+				box-shadow: 0 0 6px var(--glow-accent);
 			}
 
 			button {
 				padding: 0.65rem 0.75rem;
 				border: 0;
-				border-radius: 6px;
-				background: #111827;
-				color: #fff;
+				border-radius: var(--border-radius);
+				background: var(--bg-button);
+				color: var(--color-button);
 				font-weight: 600;
+				font-family: var(--font-family);
 				cursor: pointer;
+				transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+			}
+
+			:root.theme-retro button:not(:disabled):hover {
+				box-shadow: 0 0 10px #ff6b35aa;
 			}
 
 			button:disabled {
-				background: #9ca3af;
+				background: var(--bg-button-disabled);
 				cursor: not-allowed;
 			}
 
 			#battle-result {
 				margin-top: 1rem;
 				padding: 0.75rem;
-				border: 1px solid #d1d5db;
-				background: #f9fafb;
-				border-radius: 6px;
+				border: 1px solid var(--border-color);
+				background: var(--bg-result);
+				border-radius: var(--border-radius);
+				transition: background 0.3s, border-color 0.3s;
 			}
 
 			#status {
@@ -90,11 +173,16 @@
 			}
 
 			.card {
-				border: 1px solid #d1d5db;
-				border-radius: 6px;
+				border: 1px solid var(--border-color);
+				border-radius: var(--border-radius);
 				padding: 0.75rem;
 				margin-top: 0.6rem;
-				background: #fff;
+				background: var(--bg-card);
+				transition: background 0.3s, border-color 0.3s;
+			}
+
+			:root.theme-retro .card {
+				border-left: 3px solid #ff6b35;
 			}
 
 			.card h2 {
@@ -108,13 +196,41 @@
 				margin-right: 0.5rem;
 			}
 
+			:root.theme-retro .name {
+				color: #ff6b35;
+				text-shadow: 0 0 6px #ff6b3588;
+			}
+
 			.small {
-				color: #4b5563;
+				color: var(--color-muted);
 				font-size: 0.92rem;
+			}
+
+			/* ── Theme toggle button ── */
+			.theme-toggle {
+				position: fixed;
+				top: 1rem;
+				right: 1rem;
+				padding: 0.4rem 0.8rem;
+				font-size: 0.8rem;
+				border: 1px solid var(--border-color);
+				border-radius: 999px;
+				background: var(--bg-container);
+				color: var(--color-text);
+				font-family: var(--font-family);
+				cursor: pointer;
+				z-index: 100;
+				transition: background 0.3s, color 0.3s, border-color 0.3s, box-shadow 0.3s;
+			}
+
+			:root.theme-retro .theme-toggle {
+				box-shadow: 0 0 8px var(--glow-accent);
 			}
 		</style>
 	</head>
 	<body>
+		<button class="theme-toggle" id="theme-toggle" aria-label="Switch to retro arcade theme" title="Switch to retro arcade theme">🎮 Retro</button>
+
 		<main class="container">
 			<h1>Mona Mayhem - GitHub Contribution Battle Arena</h1>
 			<p>Enter two GitHub usernames and start a quick contribution battle.</p>
@@ -137,6 +253,36 @@
 				<div id="result" class="small"></div>
 			</section>
 		</main>
+
+		<script type="module">
+			// ── Theme toggle ──
+			const THEME_KEY = 'mona-mayhem-theme';
+			const themeToggleBtn = document.querySelector('#theme-toggle');
+			const root = document.documentElement;
+
+			function applyTheme(theme) {
+				if (theme === 'retro') {
+					root.classList.add('theme-retro');
+					themeToggleBtn.textContent = '☀️ Default';
+					themeToggleBtn.setAttribute('aria-label', 'Switch to default theme');
+					themeToggleBtn.title = 'Switch to default theme';
+				} else {
+					root.classList.remove('theme-retro');
+					themeToggleBtn.textContent = '🎮 Retro';
+					themeToggleBtn.setAttribute('aria-label', 'Switch to retro arcade theme');
+					themeToggleBtn.title = 'Switch to retro arcade theme';
+				}
+			}
+
+			// Restore saved preference
+			applyTheme(localStorage.getItem(THEME_KEY) || 'default');
+
+			themeToggleBtn.addEventListener('click', () => {
+				const next = root.classList.contains('theme-retro') ? 'default' : 'retro';
+				localStorage.setItem(THEME_KEY, next);
+				applyTheme(next);
+			});
+		</script>
 
 		<script type="module">
 			const USERNAME_RE = /^(?!-)(?!.*--)[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$/i;
