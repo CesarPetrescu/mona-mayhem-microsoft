@@ -1230,18 +1230,26 @@
 
 				j(x, y) { return { x, y, tx: x, ty: y, vx: 0, vy: 0 }; }
 
-				applyHit(force) {
+				applyHit(forceX, forceY) {
 					this.hp = Math.max(0, this.hp - 12);
 					this.hitFlash = 8;
-					this.knockVX += force * 0.8;
+					this.knockVX += forceX * 0.8;
 					const isKO = this.hp <= 0;
 					if (isKO) this.state = 'ko';
 					else this.state = 'hit';
 
+					// Pop the figure upward on hit + random limb flailing
+					const upForce = -Math.abs(forceX) * 0.7 + forceY;
 					for (const jt of Object.values(this.joints)) {
-						jt.vx += force * (0.6 + Math.random() * 0.8);
-						jt.vy += (Math.random() - 0.4) * Math.abs(force) * 0.6;
+						jt.vx += forceX * (0.5 + Math.random() * 1.0);
+						jt.vy += upForce * (0.4 + Math.random() * 0.8) + (Math.random() - 0.5) * Math.abs(forceX) * 1.2;
 					}
+					// Extra pop on head and hands for comic effect
+					this.joints.head.vy += upForce * 1.5;
+					this.joints.lHand.vy += upForce * 1.2;
+					this.joints.rHand.vy += upForce * 1.2;
+					this.joints.lHand.vx += (Math.random() - 0.5) * Math.abs(forceX) * 2;
+					this.joints.rHand.vx += (Math.random() - 0.5) * Math.abs(forceX) * 2;
 				}
 
 				setVictory() { this.state = 'victory'; }
@@ -1459,21 +1467,64 @@
 					figureL.update(); figureL.draw(sCtx);
 					figureR.update(); figureR.draw(sCtx);
 
+					// Laptops — drawn in front of each figure
+					const figLX = figureL.baseX + figureL.knockX;
+					const figRX = figureR.baseX + figureR.knockX;
+
+					function drawLaptop(cx, cy, facing, color) {
+						const f = facing;
+						// Laptop base (keyboard)
+						const baseW = 28, baseH = 4;
+						const baseX = cx + f * 18;
+						const baseY = cy;
+						sCtx.fillStyle = '#222';
+						sCtx.strokeStyle = '#444';
+						sCtx.lineWidth = 1;
+						sCtx.beginPath();
+						sCtx.rect(baseX - baseW / 2, baseY - baseH / 2, baseW, baseH);
+						sCtx.fill();
+						sCtx.stroke();
+
+						// Screen (angled up from the base)
+						const scrW = 26, scrH = 18;
+						const scrX = baseX;
+						const scrY = baseY - baseH / 2 - scrH;
+						sCtx.fillStyle = '#0a0a1a';
+						sCtx.strokeStyle = '#444';
+						sCtx.beginPath();
+						sCtx.rect(scrX - scrW / 2, scrY, scrW, scrH);
+						sCtx.fill();
+						sCtx.stroke();
+
+						// Screen glow content (little green/purple lines)
+						sCtx.fillStyle = color;
+						sCtx.shadowColor = color;
+						sCtx.shadowBlur = 4;
+						for (let i = 0; i < 4; i++) {
+							const lw = 8 + Math.random() * 12;
+							sCtx.fillRect(scrX - scrW / 2 + 3, scrY + 3 + i * 4, lw, 2);
+						}
+						sCtx.shadowBlur = 0;
+					}
+
+					const laptopLY = stageGroundY - 8;
+					const laptopRY = stageGroundY - 8;
+					drawLaptop(figLX, laptopLY, 1, figureL.color);
+					drawLaptop(figRX, laptopRY, -1, figureR.color);
+
 					// Labels
 					sCtx.font = '10px "Share Tech Mono", monospace';
 					sCtx.textAlign = 'center';
 					sCtx.fillStyle = figureL.color;
 					sCtx.shadowColor = figureL.color;
 					sCtx.shadowBlur = 4;
-					sCtx.fillText(figureL.label || '', figureL.baseX + figureL.knockX, stageGroundY + 34);
+					sCtx.fillText(figureL.label || '', figLX, stageGroundY + 34);
 					sCtx.fillStyle = figureR.color;
 					sCtx.shadowColor = figureR.color;
-					sCtx.fillText(figureR.label || '', figureR.baseX + figureR.knockX, stageGroundY + 34);
+					sCtx.fillText(figureR.label || '', figRX, stageGroundY + 34);
 					sCtx.shadowBlur = 0;
 
 					// ── Projectiles (drawn on same canvas) ──
-					const figLX = figureL.baseX + figureL.knockX;
-					const figRX = figureR.baseX + figureR.knockX;
 					const figCY = stageGroundY - 30; // center body height
 
 					for (const p of projs) {
@@ -1501,7 +1552,7 @@
 							if (p.side === 'left') {
 								const dx = p.x - figRX, dy = p.y - figCY;
 								if (Math.sqrt(dx * dx + dy * dy) < 30) {
-									figureR.applyHit(6);
+									figureR.applyHit(6, p.vy * 1.5);
 									stageExplode(p.x, p.y, p.color, 6);
 									p.alive = false;
 									playImpactSound();
@@ -1509,7 +1560,7 @@
 							} else {
 								const dx = p.x - figLX, dy = p.y - figCY;
 								if (Math.sqrt(dx * dx + dy * dy) < 30) {
-									figureL.applyHit(-6);
+									figureL.applyHit(-6, p.vy * 1.5);
 									stageExplode(p.x, p.y, p.color, 6);
 									p.alive = false;
 									playImpactSound();
@@ -1589,16 +1640,19 @@
 					const winSide = p1.total >= p2.total ? 'left' : 'right';
 					battleActive = true;
 
-					// Spawn from near each figure
+					// Spawn from laptop screens
 					function spawn(day, side, colors) {
 						const c = colors[Math.min(day.level, colors.length - 1)] || '#33ff66';
 						const r = 2.5 + day.level * 1.8;
 						const spd = 4 + day.level * 1;
-						const fromX = side === 'left' ? figureL.baseX + 25 : figureR.baseX - 25;
-						const fromY = stageGroundY - 30 + (Math.random() - 0.5) * 30;
-						return { x: fromX, y: fromY,
-							vx: side === 'left' ? spd : -spd,
-							vy: (Math.random() - 0.5) * 1.5,
+						const fig = side === 'left' ? figureL : figureR;
+						const f = side === 'left' ? 1 : -1;
+						// Laptop screen center position
+						const laptopX = (fig.baseX + fig.knockX) + f * 18;
+						const laptopY = stageGroundY - 8 - 4 / 2 - 18 / 2; // screen center
+						return { x: laptopX + f * 14, y: laptopY + (Math.random() - 0.5) * 10,
+							vx: f * spd,
+							vy: (Math.random() - 0.5) * 1.8,
 							radius: r, color: c, side, alive: true, trail: [] };
 					}
 
