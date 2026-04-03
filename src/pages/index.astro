@@ -671,6 +671,17 @@
 				text-shadow: 0 0 10px var(--accent-1), 0 0 20px rgba(51, 255, 102, 0.3);
 			}
 
+			/* ── Fight Stage ───────────────────────────────────────────── */
+			#fight-stage {
+				width: 100%;
+				height: 160px;
+				margin-top: 0.75rem;
+				border: 1px solid var(--panel-border);
+				border-radius: 4px;
+				background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 85%, rgba(26,58,26,0.4) 100%);
+				display: block;
+			}
+
 			/* ── Battle Canvas ─────────────────────────────────────────── */
 			#battle-canvas {
 				position: absolute;
@@ -850,6 +861,7 @@
 						<div id="status" class="hidden"></div>
 
 						<section id="battle-result">
+							<canvas id="fight-stage" class="hidden"></canvas>
 							<canvas id="battle-canvas" class="hidden"></canvas>
 							<div id="arena" class="hidden"></div>
 							<div id="winner-banner" class="hidden"></div>
@@ -1183,6 +1195,273 @@
 					const w = a.total > b.total ? a : b;
 					bannerEl.textContent = `${w.username} WINS!`;
 				}
+			}
+
+			// ── Stick Figure System ───────────────────────────────────────
+			const stageCanvas = document.querySelector('#fight-stage');
+			const sCtx = stageCanvas.getContext('2d');
+			let figureL = null, figureR = null;
+			let stageAnimId = null;
+
+			class StickFigure {
+				constructor(baseX, groundY, color, facing) {
+					this.baseX = baseX;
+					this.groundY = groundY;
+					this.color = color;
+					this.facing = facing;
+					this.hp = 100;
+					this.state = 'idle';
+					this.phase = Math.random() * 6.28;
+					this.knockX = 0;
+					this.knockVX = 0;
+					this.hitFlash = 0;
+
+					const f = facing;
+					this.joints = {
+						head:   this.j(0, -62),
+						neck:   this.j(0, -50),
+						body:   this.j(0, -30),
+						hip:    this.j(0, -12),
+						lElbow: this.j(-14 * f, -42),
+						rElbow: this.j(14 * f, -42),
+						lHand:  this.j(-22 * f, -30),
+						rHand:  this.j(22 * f, -30),
+						lKnee:  this.j(-7, 2),
+						rKnee:  this.j(7, 2),
+						lFoot:  this.j(-11, 16),
+						rFoot:  this.j(11, 16),
+					};
+
+					// Store original targets
+					for (const jt of Object.values(this.joints)) {
+						jt.ox = jt.tx; jt.oy = jt.ty;
+					}
+				}
+
+				j(x, y) { return { x, y, tx: x, ty: y, vx: 0, vy: 0 }; }
+
+				applyHit(force) {
+					this.hp = Math.max(0, this.hp - 12);
+					this.hitFlash = 8;
+					this.knockVX += force * 0.8;
+					const isKO = this.hp <= 0;
+					if (isKO) this.state = 'ko';
+					else this.state = 'hit';
+
+					for (const jt of Object.values(this.joints)) {
+						jt.vx += force * (0.6 + Math.random() * 0.8);
+						jt.vy += (Math.random() - 0.4) * Math.abs(force) * 0.6;
+					}
+				}
+
+				setVictory() { this.state = 'victory'; }
+
+				update() {
+					this.phase += 0.06;
+					if (this.hitFlash > 0) this.hitFlash--;
+
+					// Knockback recovery
+					this.knockVX *= 0.88;
+					this.knockX += this.knockVX;
+					this.knockX *= 0.92;
+
+					const f = this.facing;
+
+					// Update idle pose targets based on state
+					if (this.state === 'idle') {
+						const bob = Math.sin(this.phase) * 2;
+						const armSwing = Math.sin(this.phase * 0.7) * 5;
+						this.joints.head.ty = -62 + bob;
+						this.joints.neck.ty = -50 + bob * 0.8;
+						this.joints.body.ty = -30 + bob * 0.4;
+						this.joints.lHand.tx = -22 * f + armSwing;
+						this.joints.rHand.tx = 22 * f - armSwing;
+						this.joints.lElbow.tx = -14 * f + armSwing * 0.5;
+						this.joints.rElbow.tx = 14 * f - armSwing * 0.5;
+					} else if (this.state === 'victory') {
+						const jump = Math.abs(Math.sin(this.phase * 1.5)) * 12;
+						this.joints.head.ty = -62 - jump - 5;
+						this.joints.neck.ty = -50 - jump - 3;
+						this.joints.body.ty = -30 - jump;
+						this.joints.hip.ty = -12 - jump;
+						this.joints.lElbow.ty = -55 - jump;
+						this.joints.rElbow.ty = -55 - jump;
+						this.joints.lHand.ty = -62 - jump;
+						this.joints.rHand.ty = -62 - jump;
+						this.joints.lHand.tx = -18 * f;
+						this.joints.rHand.tx = 18 * f;
+						this.joints.lKnee.ty = 2 - jump * 0.5;
+						this.joints.rKnee.ty = 2 - jump * 0.5;
+						this.joints.lFoot.ty = 16 - jump * 0.2;
+						this.joints.rFoot.ty = 16 - jump * 0.2;
+					} else if (this.state === 'ko') {
+						// Collapse — targets shift to lying down
+						const lean = this.facing * 30;
+						this.joints.head.tx = lean + 20 * this.facing;
+						this.joints.head.ty = 10;
+						this.joints.neck.tx = lean + 10 * this.facing;
+						this.joints.neck.ty = 5;
+						this.joints.body.tx = lean;
+						this.joints.body.ty = 8;
+						this.joints.hip.tx = lean - 5 * this.facing;
+						this.joints.hip.ty = 12;
+						this.joints.lElbow.tx = lean + 25 * this.facing;
+						this.joints.lElbow.ty = 12;
+						this.joints.rElbow.tx = lean - 10 * this.facing;
+						this.joints.rElbow.ty = 14;
+						this.joints.lHand.tx = lean + 35 * this.facing;
+						this.joints.lHand.ty = 15;
+						this.joints.rHand.tx = lean - 15 * this.facing;
+						this.joints.rHand.ty = 16;
+						this.joints.lKnee.tx = lean - 12 * this.facing;
+						this.joints.lKnee.ty = 14;
+						this.joints.rKnee.tx = lean - 18 * this.facing;
+						this.joints.rKnee.ty = 12;
+						this.joints.lFoot.tx = lean - 20 * this.facing;
+						this.joints.lFoot.ty = 16;
+						this.joints.rFoot.tx = lean - 28 * this.facing;
+						this.joints.rFoot.ty = 14;
+					}
+
+					// Spring physics
+					const spring = this.state === 'ko' ? 0.06 : (this.state === 'hit' ? 0.08 : 0.12);
+					const damp = this.state === 'ko' ? 0.82 : 0.86;
+
+					for (const jt of Object.values(this.joints)) {
+						jt.vx += (jt.tx - jt.x) * spring;
+						jt.vy += (jt.ty - jt.y) * spring;
+						if (this.state === 'ko') jt.vy += 0.15;
+						jt.vx *= damp;
+						jt.vy *= damp;
+						jt.x += jt.vx;
+						jt.y += jt.vy;
+						// Ground constraint
+						if (jt.y > 18) { jt.y = 18; jt.vy *= -0.2; }
+					}
+
+					// Recover from hit
+					if (this.state === 'hit' && this.hitFlash === 0) this.state = 'idle';
+				}
+
+				draw(ctx) {
+					const bx = this.baseX + this.knockX;
+					const by = this.groundY;
+					const j = this.joints;
+
+					// Hit flash
+					const col = this.hitFlash > 0 && this.hitFlash % 2 === 0 ? '#fff' : this.color;
+
+					ctx.strokeStyle = col;
+					ctx.fillStyle = col;
+					ctx.lineWidth = 3;
+					ctx.lineCap = 'round';
+					ctx.lineJoin = 'round';
+					ctx.shadowColor = col;
+					ctx.shadowBlur = this.state === 'victory' ? 12 : 5;
+
+					// Head
+					ctx.beginPath();
+					ctx.arc(bx + j.head.x, by + j.head.y, 7, 0, Math.PI * 2);
+					ctx.stroke();
+
+					// Eyes (simple dots)
+					if (this.state !== 'ko') {
+						ctx.fillStyle = col;
+						const eyeX = this.facing * 2.5;
+						ctx.fillRect(bx + j.head.x + eyeX - 1, by + j.head.y - 2, 2, 2);
+						ctx.fillRect(bx + j.head.x + eyeX + 4 * this.facing, by + j.head.y - 2, 2, 2);
+					} else {
+						// X eyes for KO
+						ctx.lineWidth = 1.5;
+						const hx = bx + j.head.x, hy = by + j.head.y;
+						ctx.beginPath(); ctx.moveTo(hx - 3, hy - 4); ctx.lineTo(hx + 1, hy); ctx.stroke();
+						ctx.beginPath(); ctx.moveTo(hx + 1, hy - 4); ctx.lineTo(hx - 3, hy); ctx.stroke();
+						ctx.beginPath(); ctx.moveTo(hx + 3, hy - 4); ctx.lineTo(hx + 7, hy); ctx.stroke();
+						ctx.beginPath(); ctx.moveTo(hx + 7, hy - 4); ctx.lineTo(hx + 3, hy); ctx.stroke();
+						ctx.lineWidth = 3;
+					}
+
+					// Body (neck → body → hip)
+					this.drawLimb(ctx, bx, by, j.neck, j.body);
+					this.drawLimb(ctx, bx, by, j.body, j.hip);
+
+					// Arms
+					this.drawLimb(ctx, bx, by, j.neck, j.lElbow);
+					this.drawLimb(ctx, bx, by, j.lElbow, j.lHand);
+					this.drawLimb(ctx, bx, by, j.neck, j.rElbow);
+					this.drawLimb(ctx, bx, by, j.rElbow, j.rHand);
+
+					// Legs
+					this.drawLimb(ctx, bx, by, j.hip, j.lKnee);
+					this.drawLimb(ctx, bx, by, j.lKnee, j.lFoot);
+					this.drawLimb(ctx, bx, by, j.hip, j.rKnee);
+					this.drawLimb(ctx, bx, by, j.rKnee, j.rFoot);
+
+					ctx.shadowBlur = 0;
+				}
+
+				drawLimb(ctx, bx, by, a, b) {
+					ctx.beginPath();
+					ctx.moveTo(bx + a.x, by + a.y);
+					ctx.lineTo(bx + b.x, by + b.y);
+					ctx.stroke();
+				}
+			}
+
+			function initFighters(color1, color2) {
+				const dpr = window.devicePixelRatio || 1;
+				const rect = stageCanvas.getBoundingClientRect();
+				stageCanvas.width = rect.width * dpr;
+				stageCanvas.height = rect.height * dpr;
+				stageCanvas.style.width = rect.width + 'px';
+				stageCanvas.style.height = rect.height + 'px';
+				sCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+				const W = rect.width, H = rect.height;
+				const groundY = H - 20;
+
+				figureL = new StickFigure(W * 0.2, groundY, color1, 1);
+				figureR = new StickFigure(W * 0.8, groundY, color2, -1);
+				stageCanvas.classList.remove('hidden');
+
+				// Ground line
+				function drawGround() {
+					sCtx.strokeStyle = 'rgba(26, 58, 26, 0.5)';
+					sCtx.lineWidth = 1;
+					sCtx.setLineDash([4, 4]);
+					sCtx.beginPath();
+					sCtx.moveTo(0, groundY + 18);
+					sCtx.lineTo(W, groundY + 18);
+					sCtx.stroke();
+					sCtx.setLineDash([]);
+				}
+
+				if (stageAnimId) cancelAnimationFrame(stageAnimId);
+				function loop() {
+					sCtx.clearRect(0, 0, W, H);
+					drawGround();
+					figureL.update(); figureL.draw(sCtx);
+					figureR.update(); figureR.draw(sCtx);
+
+					// Name labels
+					sCtx.font = '10px "Share Tech Mono", monospace';
+					sCtx.textAlign = 'center';
+					sCtx.fillStyle = figureL.color;
+					sCtx.shadowColor = figureL.color;
+					sCtx.shadowBlur = 4;
+					sCtx.fillText(figureL.label || '', figureL.baseX + figureL.knockX, groundY + 34);
+					sCtx.fillStyle = figureR.color;
+					sCtx.shadowColor = figureR.color;
+					sCtx.fillText(figureR.label || '', figureR.baseX + figureR.knockX, groundY + 34);
+					sCtx.shadowBlur = 0;
+
+					stageAnimId = requestAnimationFrame(loop);
+				}
+				loop();
+			}
+
+			function stopFighters() {
+				if (stageAnimId) { cancelAnimationFrame(stageAnimId); stageAnimId = null; }
 			}
 
 			// ── Battle Canvas Animation ───────────────────────────────────
