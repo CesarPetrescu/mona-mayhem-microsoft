@@ -79,7 +79,6 @@ function buildSuccessResponse(username: string, cacheStatus: CacheStatus, entry:
   const headers = buildCorsHeaders();
   headers.set('X-Cache-Status', cacheStatus);
   headers.set('X-Cache-Fetched-At', new Date(entry.fetchedAt).toISOString());
-  if (entry.etag) headers.set('ETag', entry.etag);
   return jsonResponse(buildSuccessPayload(username, cacheStatus, entry), 200, headers);
 }
 
@@ -231,6 +230,9 @@ export const handleContribsGet: APIRoute = async ({ params, request }) => {
     }
     if (error instanceof DOMException && error.name === 'AbortError') {
       return buildErrorResponse(504, 'UPSTREAM_TIMEOUT', 'Upstream request timed out');
+    }
+    if (error instanceof TypeError) {
+      return buildErrorResponse(502, 'UPSTREAM_UNAVAILABLE', 'Failed to reach GitHub upstream');
     }
     return buildErrorResponse(500, 'INTERNAL_ERROR', 'Unexpected internal error');
   }

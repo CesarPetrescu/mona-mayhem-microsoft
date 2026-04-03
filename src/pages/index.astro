@@ -8,168 +8,363 @@
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
 		<title>Mona Mayhem - GitHub Contribution Battle Arena</title>
-		<style>
-			/* ── Colour themes ────────────────────────────────────────────── */
-
-			/* Default: green / purple (retro-arcade classic) */
+		<style is:global>
+			/* ── CSS Custom Properties / Themes ─────────────────────────── */
 			:root {
-				--theme-primary:       #22c55e;
-				--theme-primary-glow:  rgba(34, 197, 94, 0.3);
-				--theme-vs-start:      #667eea;
-				--theme-vs-end:        #764ba2;
-				--theme-vs-shadow:     rgba(102, 126, 234, 0.4);
-				--theme-winner-bg:     linear-gradient(135deg, #d1fae5, #a7f3d0);
-				--theme-winner-text:   #065f46;
+				--bg: #0a0a1a;
+				--bg-card: #111128;
+				--bg-card-border: #2a2a4a;
+				--text: #e0e0e0;
+				--text-muted: #8888aa;
+				--accent-1: #5fed83;
+				--accent-2: #8a2be2;
+				--accent-error: #ff3366;
+				--font-retro: 'Press Start 2P', monospace;
+				--glow-1: 0 0 10px var(--accent-1), 0 0 20px var(--accent-1), 0 0 40px var(--accent-1);
+				--glow-2: 0 0 10px var(--accent-2), 0 0 20px var(--accent-2), 0 0 40px var(--accent-2);
+				--glow-error: 0 0 10px var(--accent-error), 0 0 20px var(--accent-error);
 			}
 
-			/* Alternative: blue / orange (electric arcade) */
 			[data-theme="blue-orange"] {
-				--theme-primary:       #00f5ff;
-				--theme-primary-glow:  rgba(0, 245, 255, 0.3);
-				--theme-vs-start:      #ff6b35;
-				--theme-vs-end:        #ff9f1c;
-				--theme-vs-shadow:     rgba(255, 107, 53, 0.4);
-				--theme-winner-bg:     linear-gradient(135deg, #fff3e0, #ffe0cc);
-				--theme-winner-text:   #7c2d12;
+				--accent-1: #00f5ff;
+				--accent-2: #ff6b35;
+				--glow-1: 0 0 10px var(--accent-1), 0 0 20px var(--accent-1), 0 0 40px var(--accent-1);
+				--glow-2: 0 0 10px var(--accent-2), 0 0 20px var(--accent-2), 0 0 40px var(--accent-2);
 			}
 
-			/* ── Base styles ──────────────────────────────────────────────── */
+			/* ── Keyframe Animations ───────────────────────────────────── */
+			@keyframes neonPulse {
+				0%, 100% { text-shadow: 0 0 10px var(--accent-1), 0 0 20px var(--accent-1), 0 0 40px var(--accent-1), 0 0 80px var(--accent-1); }
+				50% { text-shadow: 0 0 5px var(--accent-1), 0 0 10px var(--accent-1), 0 0 20px var(--accent-1); }
+			}
+
+			@keyframes gradientShift {
+				0% { background-position: 0% 50%; }
+				50% { background-position: 100% 50%; }
+				100% { background-position: 0% 50%; }
+			}
+
+			@keyframes shimmer {
+				0% { transform: translateX(-100%) rotate(25deg); }
+				100% { transform: translateX(200%) rotate(25deg); }
+			}
+
+			@keyframes floatIn {
+				from { opacity: 0; transform: translateY(20px); }
+				to { opacity: 1; transform: translateY(0); }
+			}
+
+			@keyframes colorShift {
+				0%, 100% { color: var(--accent-1); }
+				50% { color: var(--accent-2); }
+			}
+
+			@keyframes shake {
+				0%, 100% { transform: translateX(0); }
+				10%, 50%, 90% { transform: translateX(-4px); }
+				30%, 70% { transform: translateX(4px); }
+			}
+
+			@keyframes bannerPop {
+				0% { transform: scale(0); opacity: 0; }
+				60% { transform: scale(1.15); }
+				100% { transform: scale(1); opacity: 1; }
+			}
+
+			@keyframes bannerGlow {
+				0%, 100% { text-shadow: var(--glow-1); }
+				50% { text-shadow: var(--glow-2); }
+			}
+
+			@keyframes slideInLeft {
+				from { opacity: 0; transform: translateX(-40px); }
+				to { opacity: 1; transform: translateX(0); }
+			}
+
+			@keyframes slideInRight {
+				from { opacity: 0; transform: translateX(40px); }
+				to { opacity: 1; transform: translateX(0); }
+			}
+
+			@keyframes countdownPulse {
+				0% { transform: scale(0.5); opacity: 0; }
+				50% { transform: scale(1.2); opacity: 1; }
+				100% { transform: scale(1); opacity: 0.8; }
+			}
+
+			@keyframes skeleton-loading {
+				0% { background-position: 200% 0; }
+				100% { background-position: -200% 0; }
+			}
+
+			/* ── CRT Scanline Effect ───────────────────────────────────── */
+			body::after {
+				content: '';
+				position: fixed;
+				inset: 0;
+				background: repeating-linear-gradient(
+					0deg,
+					transparent,
+					transparent 2px,
+					rgba(0, 0, 0, 0.08) 2px,
+					rgba(0, 0, 0, 0.08) 4px
+				);
+				pointer-events: none;
+				z-index: 9999;
+			}
+
+			/* ── Base Styles ───────────────────────────────────────────── */
+			* { box-sizing: border-box; }
 
 			body {
-				font-family: Arial, Helvetica, sans-serif;
+				font-family: var(--font-retro);
 				margin: 0;
 				padding: 1.5rem;
-				background: #f4f4f4;
-				color: #111827;
+				background: var(--bg);
+				color: var(--text);
 				display: grid;
 				place-items: center;
 				min-height: 100vh;
+				line-height: 1.8;
 			}
 
 			.container {
 				width: min(900px, 100%);
 				padding: 1.5rem;
 				border-radius: 10px;
-				background: #ffffff;
-				border: 1px solid #d1d5db;
-				box-sizing: border-box;
+				background: var(--bg-card);
+				border: 1px solid var(--bg-card-border);
 				position: relative;
 			}
 
+			/* ── Controls Bar ──────────────────────────────────────────── */
+			.controls {
+				display: flex;
+				justify-content: flex-end;
+				gap: 0.5rem;
+				margin-bottom: 0.75rem;
+			}
+
+			.control-btn {
+				padding: 0.3rem 0.6rem;
+				border: 1px solid var(--bg-card-border);
+				border-radius: 4px;
+				background: transparent;
+				color: var(--text-muted);
+				font-family: var(--font-retro);
+				font-size: 0.5rem;
+				cursor: pointer;
+				transition: color 0.2s, border-color 0.2s;
+			}
+
+			.control-btn:hover {
+				color: var(--accent-1);
+				border-color: var(--accent-1);
+			}
+
+			/* ── Title ─────────────────────────────────────────────────── */
 			h1 {
-				font-size: 1.6rem;
-				margin: 0 0 0.75rem;
+				font-size: 1.1rem;
+				margin: 0 0 0.5rem;
+				color: var(--accent-1);
+				animation: neonPulse 3s ease-in-out infinite;
+				text-align: center;
 			}
 
-			p {
+			.subtitle {
 				margin: 0 0 1rem;
-				color: #4b5563;
+				color: var(--text-muted);
+				font-size: 0.55rem;
+				text-align: center;
 			}
 
+			/* ── Form ──────────────────────────────────────────────────── */
 			form {
 				display: grid;
-				grid-template-columns: 1fr 1fr auto;
+				grid-template-columns: 1fr auto 1fr;
 				gap: 0.9rem;
 				align-items: end;
 			}
 
-			@media (max-width: 600px) {
-				form {
-					grid-template-columns: 1fr;
-				}
+			form.shake {
+				animation: shake 0.5s ease-in-out;
 			}
 
 			.field {
 				display: grid;
 				gap: 0.35rem;
+				animation: floatIn 0.6s ease-out both;
 			}
+
+			.field:nth-child(1) { animation-delay: 0.1s; }
+			.field:nth-child(3) { animation-delay: 0.3s; }
 
 			label {
 				font-weight: 600;
+				font-size: 0.55rem;
+				color: var(--accent-2);
 			}
 
 			input {
 				padding: 0.65rem 0.75rem;
-				border: 1px solid #d1d5db;
+				border: 1px solid var(--bg-card-border);
 				border-radius: 6px;
-				font-size: 1rem;
+				font-size: 0.7rem;
+				font-family: var(--font-retro);
+				background: var(--bg);
+				color: var(--text);
+				transition: border-color 0.2s, box-shadow 0.2s;
 			}
 
-			input.error {
-				border-color: #dc2626;
+			input:focus {
+				outline: none;
+				border-color: var(--accent-1);
+				box-shadow: 0 0 8px rgba(95, 237, 131, 0.3);
 			}
 
-			button {
-				padding: 0.65rem 1.25rem;
-				border: 0;
-				border-radius: 6px;
-				background: #111827;
+			input.input-error {
+				border-color: var(--accent-error);
+				box-shadow: 0 0 8px rgba(255, 51, 102, 0.3);
+			}
+
+			.error-msg {
+				color: var(--accent-error);
+				font-size: 0.45rem;
+				text-shadow: 0 0 6px rgba(255, 51, 102, 0.4);
+				min-height: 1.2em;
+			}
+
+			/* ── VS Badge ──────────────────────────────────────────────── */
+			.vs-badge {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 50px;
+				height: 50px;
+				border-radius: 50%;
+				background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-1));
+				background-size: 200% 200%;
+				animation: gradientShift 3s ease infinite;
 				color: #fff;
-				font-weight: 600;
-				cursor: pointer;
-				height: fit-content;
+				font-weight: 800;
+				font-size: 0.7rem;
+				align-self: center;
+				box-shadow: 0 0 15px rgba(95, 237, 131, 0.3), 0 0 15px rgba(138, 43, 226, 0.3);
+				font-family: var(--font-retro);
 			}
 
-			button:disabled {
-				background: #9ca3af;
+			/* ── Battle Button ─────────────────────────────────────────── */
+			#battle-btn {
+				grid-column: 1 / -1;
+				padding: 0.75rem 1.25rem;
+				border: 2px solid var(--accent-1);
+				border-radius: 6px;
+				background: transparent;
+				color: var(--accent-1);
+				font-weight: 600;
+				font-family: var(--font-retro);
+				font-size: 0.7rem;
+				cursor: pointer;
+				transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+				text-transform: uppercase;
+				letter-spacing: 2px;
+			}
+
+			#battle-btn:hover:not(:disabled) {
+				background: var(--accent-1);
+				color: var(--bg);
+				box-shadow: var(--glow-1);
+			}
+
+			#battle-btn:disabled {
+				border-color: var(--text-muted);
+				color: var(--text-muted);
 				cursor: not-allowed;
 			}
 
-			#battle-result {
-				margin-top: 1.5rem;
+			/* ── Focus Visible ─────────────────────────────────────────── */
+			*:focus-visible {
+				outline: 2px solid var(--accent-1);
+				outline-offset: 2px;
+				box-shadow: 0 0 8px rgba(95, 237, 131, 0.4);
 			}
 
+			input:focus-visible {
+				outline: none;
+				border-color: var(--accent-1);
+				box-shadow: 0 0 8px rgba(95, 237, 131, 0.4);
+			}
+
+			/* ── Status ────────────────────────────────────────────────── */
 			#status {
-				margin-bottom: 0.75rem;
-				font-weight: 600;
 				text-align: center;
+				font-size: 0.6rem;
+				margin: 1rem 0;
 			}
 
-			.error-message {
-				color: #dc2626;
-				font-size: 0.875rem;
-				margin-top: 0.25rem;
+			#status.loading {
+				animation: colorShift 1.5s ease-in-out infinite;
 			}
 
-			/* Battle arena layout */
+			/* ── Battle Arena ──────────────────────────────────────────── */
 			.battle-arena {
 				display: grid;
 				grid-template-columns: 1fr auto 1fr;
 				gap: 1rem;
 				align-items: start;
+				margin-top: 1rem;
 			}
 
-			@media (max-width: 700px) {
-				.battle-arena {
-					grid-template-columns: 1fr;
-				}
-				.vs-badge {
-					justify-self: center;
-				}
-			}
-
-			/* Player card */
+			/* ── Player Cards ──────────────────────────────────────────── */
 			.player-card {
-				border: 2px solid #d1d5db;
+				border: 1px solid var(--bg-card-border);
 				border-radius: 8px;
 				padding: 1rem;
-				background: #fff;
+				background: var(--bg-card);
+				position: relative;
+				overflow: hidden;
 				transition: border-color 0.3s;
 			}
 
+			.player-card::after {
+				content: '';
+				position: absolute;
+				top: -50%;
+				left: -50%;
+				width: 30%;
+				height: 200%;
+				background: linear-gradient(
+					90deg,
+					transparent,
+					rgba(255, 255, 255, 0.05),
+					transparent
+				);
+				transform: rotate(25deg);
+				animation: shimmer 4s ease-in-out infinite;
+				pointer-events: none;
+			}
+
 			.player-card.winner {
-				border-color: var(--theme-primary);
-				box-shadow: 0 0 12px var(--theme-primary-glow);
+				border-color: var(--accent-1);
+				box-shadow: 0 0 15px rgba(95, 237, 131, 0.2);
 			}
 
-			.player-card.loser {
-				opacity: 0.7;
+			.player-card.loser { opacity: 0.6; }
+
+			.player-card.card-error {
+				border-color: var(--accent-error);
 			}
 
-			.player-card.error {
-				border-color: #dc2626;
-				background: #fef2f2;
+			.player-card.slide-left {
+				animation: slideInLeft 0.5s ease-out both;
+			}
+
+			.player-card.slide-right {
+				animation: slideInRight 0.5s ease-out both;
 			}
 
 			.player-header {
@@ -181,38 +376,29 @@
 
 			.player-name {
 				font-weight: 700;
-				font-size: 1.1rem;
+				font-size: 0.65rem;
+				color: var(--accent-2);
 			}
 
 			.player-total {
-				font-size: 1.25rem;
+				font-size: 0.7rem;
 				font-weight: 700;
-				color: var(--theme-primary);
+				color: var(--accent-1);
 			}
 
 			.player-date-range {
-				color: #6b7280;
-				font-size: 0.8rem;
-				margin-bottom: 0.75rem;
+				color: var(--text-muted);
+				font-size: 0.45rem;
+				margin-bottom: 0.5rem;
 			}
 
-			/* VS Badge */
-			.vs-badge {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 50px;
-				height: 50px;
-				border-radius: 50%;
-				background: linear-gradient(135deg, var(--theme-vs-start), var(--theme-vs-end));
-				color: #fff;
-				font-weight: 800;
-				font-size: 1rem;
-				align-self: center;
-				box-shadow: 0 4px 12px var(--theme-vs-shadow);
+			.player-streak {
+				color: var(--accent-2);
+				font-size: 0.45rem;
+				margin-top: 0.5rem;
 			}
 
-			/* Contribution grid */
+			/* ── Contribution Grid ─────────────────────────────────────── */
 			.contrib-grid {
 				display: grid;
 				grid-template-columns: repeat(53, 1fr);
@@ -226,40 +412,56 @@
 				border-radius: 2px;
 				position: relative;
 				cursor: default;
+				transition: box-shadow 0.2s;
 			}
 
-			.contrib-cell[data-count]::after {
+			.contrib-cell:hover {
+				box-shadow: 0 0 6px currentColor;
+				z-index: 2;
+			}
+
+			.contrib-cell[data-count]::before {
 				content: attr(data-count) " contributions";
 				position: absolute;
 				bottom: calc(100% + 4px);
 				left: 50%;
 				transform: translateX(-50%);
-				background: #1f2937;
-				color: #fff;
+				background: #1a1a3a;
+				color: var(--text);
 				padding: 4px 8px;
 				border-radius: 4px;
-				font-size: 0.7rem;
+				font-size: 0.4rem;
 				white-space: nowrap;
 				opacity: 0;
 				pointer-events: none;
 				transition: opacity 0.15s;
 				z-index: 10;
+				border: 1px solid var(--bg-card-border);
 			}
 
-			.contrib-cell:hover::after {
-				opacity: 1;
+			.contrib-cell:hover::before { opacity: 1; }
+
+			/* ── Contribution Legend ────────────────────────────────────── */
+			.contrib-legend {
+				display: flex;
+				align-items: center;
+				gap: 4px;
+				margin-top: 0.5rem;
+				font-size: 0.4rem;
+				color: var(--text-muted);
 			}
 
-			/* Loading skeleton */
+			.legend-square {
+				width: 10px;
+				height: 10px;
+				border-radius: 2px;
+			}
+
+			/* ── Skeleton Loading ──────────────────────────────────────── */
 			.skeleton {
-				background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+				background: linear-gradient(90deg, #1a1a3a 25%, #252550 50%, #1a1a3a 75%);
 				background-size: 200% 100%;
 				animation: skeleton-loading 1.5s infinite;
-			}
-
-			@keyframes skeleton-loading {
-				0% { background-position: 200% 0; }
-				100% { background-position: -200% 0; }
 			}
 
 			.skeleton-grid {
@@ -272,251 +474,390 @@
 			}
 
 			.skeleton-cell {
-				background: #e5e7eb;
+				background: #1a1a3a;
 				border-radius: 2px;
 			}
 
 			.skeleton-text {
-				height: 1rem;
+				height: 0.8rem;
 				border-radius: 4px;
 				margin-bottom: 0.5rem;
 			}
 
-			.skeleton-text.short {
-				width: 40%;
-			}
+			.skeleton-text.short { width: 40%; }
+			.skeleton-text.medium { width: 60%; }
 
-			.skeleton-text.medium {
-				width: 60%;
-			}
-
-			/* Result banner */
-			#result {
+			/* ── Winner Banner ─────────────────────────────────────────── */
+			#winner-banner {
 				text-align: center;
-				font-size: 1.1rem;
-				font-weight: 600;
+				font-size: 0.8rem;
 				padding: 1rem;
 				margin-top: 1rem;
+				border: 1px solid var(--bg-card-border);
+				border-radius: 8px;
+				background: var(--bg);
+				animation: bannerPop 0.6s ease-out both;
+			}
+
+			#winner-banner .banner-text {
+				animation: bannerGlow 2s ease-in-out infinite;
+			}
+
+			/* ── Countdown Overlay ─────────────────────────────────────── */
+			#countdown-overlay {
+				position: fixed;
+				inset: 0;
+				background: rgba(10, 10, 26, 0.92);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				z-index: 10000;
+				font-size: 3rem;
+				color: var(--accent-1);
+				text-shadow: var(--glow-1);
+				font-family: var(--font-retro);
+			}
+
+			.countdown-number {
+				animation: countdownPulse 0.8s ease-out both;
+			}
+
+			/* ── Share Button ──────────────────────────────────────────── */
+			#share-btn {
+				display: block;
+				margin: 0.75rem auto 0;
+				padding: 0.5rem 1rem;
+				border: 1px solid var(--accent-2);
 				border-radius: 6px;
-				background: #f3f4f6;
-			}
-
-			#result.winner-announced {
-				background: var(--theme-winner-bg);
-				color: var(--theme-winner-text);
-			}
-
-			#result.tie {
-				background: linear-gradient(135deg, #fef3c7, #fde68a);
-				color: #92400e;
-			}
-
-			.hidden {
-				display: none !important;
-			}
-
-			/* ── Theme toggle ─────────────────────────────────────────────── */
-
-			.theme-toggle {
-				position: absolute;
-				top: 1rem;
-				right: 1rem;
-				padding: 0.4rem 0.85rem;
-				border: 2px solid var(--theme-primary);
-				border-radius: 20px;
 				background: transparent;
-				color: var(--theme-primary);
-				font-size: 0.8rem;
-				font-weight: 700;
+				color: var(--accent-2);
+				font-family: var(--font-retro);
+				font-size: 0.5rem;
 				cursor: pointer;
-				letter-spacing: 0.05em;
 				transition: background 0.2s, color 0.2s;
 			}
 
-			.theme-toggle:hover {
-				background: var(--theme-primary);
-				color: #000;
+			#share-btn:hover {
+				background: var(--accent-2);
+				color: #fff;
 			}
 
+			.copy-confirm {
+				text-align: center;
+				color: var(--accent-1);
+				font-size: 0.45rem;
+				margin-top: 0.3rem;
+			}
+
+			/* ── Battle History ─────────────────────────────────────────── */
+			.history-section {
+				margin-top: 1.5rem;
+				border-top: 1px solid var(--bg-card-border);
+				padding-top: 1rem;
+			}
+
+			.history-title {
+				font-size: 0.6rem;
+				color: var(--accent-2);
+				margin: 0 0 0.75rem;
+			}
+
+			.history-entry {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 0.4rem 0.6rem;
+				border: 1px solid var(--bg-card-border);
+				border-radius: 4px;
+				margin-bottom: 0.3rem;
+				font-size: 0.4rem;
+				color: var(--text-muted);
+				background: var(--bg);
+			}
+
+			.history-players { color: var(--text); }
+			.history-winner { color: var(--accent-1); }
+
+			#clear-history-btn {
+				margin-top: 0.5rem;
+				padding: 0.3rem 0.6rem;
+				border: 1px solid var(--accent-error);
+				border-radius: 4px;
+				background: transparent;
+				color: var(--accent-error);
+				font-family: var(--font-retro);
+				font-size: 0.4rem;
+				cursor: pointer;
+			}
+
+			#clear-history-btn:hover {
+				background: var(--accent-error);
+				color: #fff;
+			}
+
+			/* ── Utility ───────────────────────────────────────────────── */
+			.hidden { display: none !important; }
+
+			/* ── Responsive: 1024px ────────────────────────────────────── */
+			@media (max-width: 1024px) {
+				.battle-arena {
+					grid-template-columns: 1fr;
+					gap: 0.5rem;
+				}
+
+				.battle-arena .vs-badge {
+					justify-self: center;
+				}
+			}
+
+			/* ── Responsive: 768px ─────────────────────────────────────── */
+			@media (max-width: 768px) {
+				body { padding: 0.75rem; }
+
+				h1 { font-size: 0.75rem; }
+				.subtitle { font-size: 0.45rem; }
+
+				form {
+					grid-template-columns: 1fr;
+					gap: 0.6rem;
+				}
+
+				.vs-badge {
+					justify-self: center;
+					width: 40px;
+					height: 40px;
+					font-size: 0.55rem;
+				}
+
+				.container { padding: 1rem; }
+
+				label { font-size: 0.45rem; }
+				input { font-size: 0.55rem; padding: 0.5rem; }
+
+				#battle-btn { font-size: 0.55rem; padding: 0.6rem; }
+
+				.player-name { font-size: 0.5rem; }
+				.player-total { font-size: 0.55rem; }
+
+				#winner-banner { font-size: 0.6rem; }
+
+				.history-entry { font-size: 0.35rem; }
+			}
 		</style>
 	</head>
 	<body>
 		<main class="container">
-			<button id="theme-toggle" class="theme-toggle" aria-label="Toggle colour theme" title="Switch colour theme">🎨 Blue / Orange</button>
-			<h1>Mona Mayhem - GitHub Contribution Battle Arena</h1>
-			<p>Enter two GitHub usernames and start a quick contribution battle.</p>
+			<div class="controls">
+				<button id="theme-toggle" class="control-btn" aria-label="Toggle color theme" title="Switch color theme">Theme</button>
+				<button id="mute-toggle" class="control-btn" aria-label="Toggle sound" title="Toggle sound effects">Sound: ON</button>
+			</div>
+
+			<h1>Mona Mayhem</h1>
+			<p class="subtitle">GitHub Contribution Battle Arena</p>
 
 			<form id="battle-form">
 				<div class="field">
 					<label for="player1">Player 1</label>
 					<input id="player1" name="player1" placeholder="e.g. octocat" autocomplete="off" />
-					<div id="player1-error" class="error-message hidden"></div>
+					<span id="p1-error" class="error-msg"></span>
 				</div>
+				<div class="vs-badge">VS</div>
 				<div class="field">
 					<label for="player2">Player 2</label>
 					<input id="player2" name="player2" placeholder="e.g. mona" autocomplete="off" />
-					<div id="player2-error" class="error-message hidden"></div>
+					<span id="p2-error" class="error-msg"></span>
 				</div>
-			<button id="battle-btn" type="submit">Battle</button>
+				<button id="battle-btn" type="submit">Battle!</button>
 			</form>
 
 			<section id="battle-result" aria-live="polite">
 				<div id="status" class="hidden"></div>
 				<div id="arena" class="hidden"></div>
-				<div id="result" class="hidden"></div>
+				<div id="winner-banner" class="hidden"></div>
+				<button id="share-btn" class="hidden">Share Results</button>
+				<div id="copy-confirm" class="copy-confirm hidden"></div>
+			</section>
+
+			<section id="battle-history" class="history-section hidden">
+				<h2 class="history-title">Recent Battles</h2>
+				<div id="history-list"></div>
+				<button id="clear-history-btn">Clear History</button>
 			</section>
 		</main>
 
+		<div id="countdown-overlay" class="hidden"></div>
+
 		<script type="module">
-			// ── Theme toggle ──────────────────────────────────────────────────
+			// ── Constants ─────────────────────────────────────────────────
+			const USERNAME_RE = /^(?!-)(?!.*--)[a-z0-9](?:[a-z0-9-]{0,37}[a-z0-9])?$/i;
+			const DEFAULT_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
+			const HISTORY_KEY = 'mona-mayhem-history';
 			const THEME_KEY = 'mona-mayhem-theme';
-			const BLUE_ORANGE = 'blue-orange';
+			const MUTE_KEY = 'mona-mayhem-mute';
+			const MAX_HISTORY = 10;
 
-			const themeToggleBtn = /** @type {HTMLButtonElement} */ (document.querySelector('#theme-toggle'));
+			// ── DOM Elements ──────────────────────────────────────────────
+			const form = document.querySelector('#battle-form');
+			const button = document.querySelector('#battle-btn');
+			const statusEl = document.querySelector('#status');
+			const arenaEl = document.querySelector('#arena');
+			const bannerEl = document.querySelector('#winner-banner');
+			const shareBtn = document.querySelector('#share-btn');
+			const copyConfirm = document.querySelector('#copy-confirm');
+			const countdownEl = document.querySelector('#countdown-overlay');
+			const historySection = document.querySelector('#battle-history');
+			const historyList = document.querySelector('#history-list');
+			const clearHistoryBtn = document.querySelector('#clear-history-btn');
+			const themeToggle = document.querySelector('#theme-toggle');
+			const muteToggle = document.querySelector('#mute-toggle');
 
+			const input1 = document.querySelector('#player1');
+			const input2 = document.querySelector('#player2');
+			const error1 = document.querySelector('#p1-error');
+			const error2 = document.querySelector('#p2-error');
+
+			// ── Theme Toggle ──────────────────────────────────────────────
 			function applyTheme(theme) {
-				if (theme === BLUE_ORANGE) {
-					document.documentElement.setAttribute('data-theme', BLUE_ORANGE);
-					themeToggleBtn.textContent = '🎨 Green / Purple';
+				if (theme === 'blue-orange') {
+					document.documentElement.setAttribute('data-theme', 'blue-orange');
+					themeToggle.textContent = 'Theme: B/O';
 				} else {
 					document.documentElement.removeAttribute('data-theme');
-					themeToggleBtn.textContent = '🎨 Blue / Orange';
+					themeToggle.textContent = 'Theme: G/P';
 				}
 			}
 
-			// Restore saved preference on load
-			applyTheme((typeof window !== 'undefined' && localStorage.getItem(THEME_KEY)) || '');
+			applyTheme(localStorage.getItem(THEME_KEY) || '');
 
-			themeToggleBtn.addEventListener('click', () => {
-				const next = document.documentElement.getAttribute('data-theme') === BLUE_ORANGE ? '' : BLUE_ORANGE;
-				if (typeof window !== 'undefined') {
-					localStorage.setItem(THEME_KEY, next);
-				}
+			themeToggle.addEventListener('click', () => {
+				const next = document.documentElement.getAttribute('data-theme') === 'blue-orange' ? '' : 'blue-orange';
+				localStorage.setItem(THEME_KEY, next);
 				applyTheme(next);
 			});
 
-			// ── Battle logic ──────────────────────────────────────────────────
-			// TypeScript interfaces (as JSDoc for vanilla JS module)
-			/**
-			 * @typedef {Object} ContributionDay
-			 * @property {number} weekday - Day of week (0=Sun, 6=Sat)
-			 * @property {number} count - Number of contributions
-			 * @property {number} level - Intensity level (0-4)
-			 */
+			// ── Sound Effects (Web Audio API) ─────────────────────────────
+			let audioCtx = null;
+			let isMuted = localStorage.getItem(MUTE_KEY) === '1';
 
-			/**
-			 * @typedef {Object} ContributionWeek
-			 * @property {number} index - Week index
-			 * @property {string} first_day - First day of week (YYYY-MM-DD)
-			 * @property {ContributionDay[]} contribution_days - Days in the week
-			 */
+			function updateMuteUI() {
+				muteToggle.textContent = isMuted ? 'Sound: OFF' : 'Sound: ON';
+			}
+			updateMuteUI();
 
-			/**
-			 * @typedef {Object} ContributionData
-			 * @property {string} schema - Schema version
-			 * @property {string} generated_at - ISO timestamp
-			 * @property {string} from - Date range start (YYYY-MM-DD)
-			 * @property {string} to - Date range end (YYYY-MM-DD)
-			 * @property {number} range_days - Number of days in range
-			 * @property {number} total_contributions - Total contribution count
-			 * @property {boolean} private_contributions_included - Whether private contribs are included
-			 * @property {string[]} colors_full - GitHub color palette
-			 * @property {ContributionWeek[]} weeks - Weekly contribution data
-			 */
+			muteToggle.addEventListener('click', () => {
+				isMuted = !isMuted;
+				localStorage.setItem(MUTE_KEY, isMuted ? '1' : '0');
+				updateMuteUI();
+			});
 
-			/**
-			 * @typedef {Object} APIResponse
-			 * @property {string} username
-			 * @property {number} fetchedAt
-			 * @property {string} cacheStatus
-			 * @property {string} source
-			 * @property {ContributionData} data
-			 */
-
-			/**
-			 * @typedef {Object} PlayerData
-			 * @property {string} username
-			 * @property {number} total
-			 * @property {string} from
-			 * @property {string} to
-			 * @property {string[]} colors
-			 * @property {ContributionWeek[]} weeks
-			 * @property {boolean} [error]
-			 * @property {string} [errorMessage]
-			 */
-
-			const DEFAULT_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'];
-
-			// DOM elements
-			const form = /** @type {HTMLFormElement} */ (document.querySelector('#battle-form'));
-			const button = /** @type {HTMLButtonElement} */ (document.querySelector('#battle-btn'));
-			const statusEl = /** @type {HTMLElement} */ (document.querySelector('#status'));
-			const arenaEl = /** @type {HTMLElement} */ (document.querySelector('#arena'));
-			const resultEl = /** @type {HTMLElement} */ (document.querySelector('#result'));
-
-			const playerInput1 = /** @type {HTMLInputElement} */ (document.querySelector('#player1'));
-			const playerInput2 = /** @type {HTMLInputElement} */ (document.querySelector('#player2'));
-			const playerError1 = /** @type {HTMLElement} */ (document.querySelector('#player1-error'));
-			const playerError2 = /** @type {HTMLElement} */ (document.querySelector('#player2-error'));
-
-			/**
-			 * @param {string} message
-			 */
-			function setStatus(message) {
-				statusEl.textContent = message;
-				statusEl.classList.toggle('hidden', !message);
+			function getAudioCtx() {
+				if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+				if (audioCtx.state === 'suspended') audioCtx.resume();
+				return audioCtx;
 			}
 
-			/**
-			 * @param {string|undefined} name
-			 * @returns {string}
-			 */
+			function playCoinSound() {
+				if (isMuted) return;
+				const ctx = getAudioCtx();
+				const now = ctx.currentTime;
+
+				[440, 880].forEach((freq, i) => {
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+					osc.type = 'square';
+					osc.frequency.value = freq;
+					gain.gain.setValueAtTime(0.15, now + i * 0.1);
+					gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.15);
+					osc.connect(gain).connect(ctx.destination);
+					osc.start(now + i * 0.1);
+					osc.stop(now + i * 0.1 + 0.15);
+				});
+			}
+
+			function playPowerUpSound() {
+				if (isMuted) return;
+				const ctx = getAudioCtx();
+				const now = ctx.currentTime;
+
+				[523, 659, 784, 1047].forEach((freq, i) => {
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+					osc.type = 'square';
+					osc.frequency.value = freq;
+					gain.gain.setValueAtTime(0.12, now + i * 0.08);
+					gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+					osc.connect(gain).connect(ctx.destination);
+					osc.start(now + i * 0.08);
+					osc.stop(now + i * 0.08 + 0.2);
+				});
+			}
+
+			function playErrorSound() {
+				if (isMuted) return;
+				const ctx = getAudioCtx();
+				const now = ctx.currentTime;
+
+				[300, 200].forEach((freq, i) => {
+					const osc = ctx.createOscillator();
+					const gain = ctx.createGain();
+					osc.type = 'sawtooth';
+					osc.frequency.value = freq;
+					gain.gain.setValueAtTime(0.15, now + i * 0.15);
+					gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.25);
+					osc.connect(gain).connect(ctx.destination);
+					osc.start(now + i * 0.15);
+					osc.stop(now + i * 0.15 + 0.25);
+				});
+			}
+
+			// ── Countdown Sequence ────────────────────────────────────────
+			function playCountdown() {
+				return new Promise((resolve) => {
+					const steps = ['3', '2', '1', 'FIGHT!'];
+					let i = 0;
+					countdownEl.classList.remove('hidden');
+
+					function showNext() {
+						if (i >= steps.length) {
+							countdownEl.classList.add('hidden');
+							countdownEl.innerHTML = '';
+							resolve();
+							return;
+						}
+						countdownEl.innerHTML = `<span class="countdown-number" style="color: ${i === 3 ? 'var(--accent-2)' : 'var(--accent-1)'}">${steps[i]}</span>`;
+						i++;
+						setTimeout(showNext, i <= 3 ? 800 : 600);
+					}
+					showNext();
+				});
+			}
+
+			// ── Validation ────────────────────────────────────────────────
+			function isValidUsername(name) {
+				return Boolean(name) && name.length <= 39 && USERNAME_RE.test(name);
+			}
+
 			function normalize(name) {
 				return (name || '').trim().toLowerCase();
 			}
 
-			/**
-			 * @param {HTMLInputElement} input
-			 * @param {HTMLElement} errorEl
-			 * @param {string} message
-			 */
-			function showFieldError(input, errorEl, message) {
-				input.classList.add('error');
-				errorEl.textContent = message;
-				errorEl.classList.remove('hidden');
+			function showError(inputEl, errorEl, msg) {
+				inputEl.classList.add('input-error');
+				errorEl.textContent = msg;
 			}
 
-			/**
-			 * @param {HTMLInputElement} input
-			 * @param {HTMLElement} errorEl
-			 */
-			function clearFieldError(input, errorEl) {
-				input.classList.remove('error');
+			function clearError(inputEl, errorEl) {
+				inputEl.classList.remove('input-error');
 				errorEl.textContent = '';
-				errorEl.classList.add('hidden');
 			}
 
-			function clearAllErrors() {
-				clearFieldError(playerInput1, playerError1);
-				clearFieldError(playerInput2, playerError2);
-			}
+			input1.addEventListener('input', () => clearError(input1, error1));
+			input2.addEventListener('input', () => clearError(input2, error2));
 
-			/**
-			 * @param {string} dateStr - YYYY-MM-DD format
-			 * @returns {string}
-			 */
-			function formatDate(dateStr) {
-				const date = new Date(dateStr);
-				return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-			}
-
-			/**
-			 * @param {string} username
-			 * @returns {Promise<PlayerData>}
-			 */
+			// ── API Fetch ─────────────────────────────────────────────────
 			async function fetchPlayer(username) {
 				const response = await fetch(`/api/contributions/${encodeURIComponent(username)}`);
-				const payload = /** @type {APIResponse} */ (await response.json());
+				const payload = await response.json();
 
 				if (!response.ok) {
 					const message = payload?.error?.message || `Request failed (${response.status})`;
@@ -527,199 +868,267 @@
 				return {
 					username,
 					total: data.total_contributions || 0,
-					from: data.from,
-					to: data.to,
+					from: data.from || '',
+					to: data.to || '',
 					colors: data.colors_full || DEFAULT_COLORS,
 					weeks: data.weeks || [],
 				};
 			}
 
-			/**
-			 * Render a contribution grid as HTML
-			 * @param {PlayerData} player
-			 * @returns {string}
-			 */
-			function renderGrid(player) {
-				if (player.error || !player.weeks) {
-					return '<div class="contrib-grid"></div>';
-				}
+			// ── Streak Calculation ────────────────────────────────────────
+			function computeStreak(weeks) {
+				if (!weeks || !weeks.length) return 0;
 
-				const cells = [];
-				for (const week of player.weeks) {
+				let maxStreak = 0;
+				let currentStreak = 0;
+
+				for (const week of weeks) {
 					for (const day of week.contribution_days) {
-						const color = player.colors[day.level] || player.colors[0];
-						cells.push(
-							`<div class="contrib-cell" style="background:${color}" data-count="${day.count}"></div>`
-						);
+						if (day.count > 0) {
+							currentStreak++;
+							if (currentStreak > maxStreak) maxStreak = currentStreak;
+						} else {
+							currentStreak = 0;
+						}
 					}
 				}
 
-				return `<div class="contrib-grid">${cells.join('')}</div>`;
+				return maxStreak;
 			}
 
-			/**
-			 * Render a player card
-			 * @param {PlayerData} player
-			 * @param {'winner'|'loser'|'tie'|'error'|null} status
-			 * @returns {string}
-			 */
-			function renderPlayerCard(player, status) {
-				const statusClass = status ? ` ${status}` : '';
+			// ── Rendering ─────────────────────────────────────────────────
+			function formatDate(dateStr) {
+				if (!dateStr) return '';
+				return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+			}
+
+			function renderGrid(player) {
+				if (!player.weeks || !player.weeks.length) return '';
+
+				const cells = player.weeks.map(week =>
+					week.contribution_days.map(day => {
+						const color = player.colors[day.level] || player.colors[0];
+						return `<div class="contrib-cell" style="background:${color};color:${color}" data-count="${day.count}"></div>`;
+					}).join('')
+				).join('');
+
+				return `<div class="contrib-grid">${cells}</div>`;
+			}
+
+			function renderLegend(colors) {
+				if (!colors || !colors.length) return '';
+				const squares = colors.map(c => `<div class="legend-square" style="background:${c}"></div>`).join('');
+				return `<div class="contrib-legend"><span>Less</span>${squares}<span>More</span></div>`;
+			}
+
+			function renderPlayerCard(player, status, slideDir) {
+				const classes = ['player-card'];
+				if (status) classes.push(status);
+				if (slideDir) classes.push(slideDir);
 
 				if (player.error) {
 					return `
-						<div class="player-card error">
+						<div class="${classes.join(' ')} card-error">
 							<div class="player-header">
 								<span class="player-name">${player.username}</span>
 							</div>
-							<div class="error-message">${player.errorMessage || 'Failed to load'}</div>
+							<div class="error-msg">${player.errorMessage || 'Failed to load'}</div>
 						</div>
 					`;
 				}
 
 				const dateRange = player.from && player.to
-					? `${formatDate(player.from)} – ${formatDate(player.to)}`
+					? `${formatDate(player.from)} - ${formatDate(player.to)}`
 					: '';
+				const streak = computeStreak(player.weeks);
 
 				return `
-					<div class="player-card${statusClass}">
+					<div class="${classes.join(' ')}">
 						<div class="player-header">
 							<span class="player-name">${player.username}</span>
 							<span class="player-total">${player.total.toLocaleString()}</span>
 						</div>
 						<div class="player-date-range">${dateRange}</div>
 						${renderGrid(player)}
+						${renderLegend(player.colors)}
+						<div class="player-streak">Longest Streak: ${streak} days</div>
 					</div>
 				`;
 			}
 
 			function renderLoadingSkeleton() {
-				const skeletonCells = Array(53 * 7).fill('<div class="skeleton-cell skeleton"></div>').join('');
-				const skeletonCard = `
+				const cells = Array(53 * 7).fill('<div class="skeleton-cell skeleton"></div>').join('');
+				const card = `
 					<div class="player-card">
 						<div class="skeleton skeleton-text short"></div>
 						<div class="skeleton skeleton-text medium"></div>
-						<div class="skeleton-grid">${skeletonCells}</div>
+						<div class="skeleton-grid">${cells}</div>
 					</div>
 				`;
-
-				arenaEl.innerHTML = `
-					<div class="battle-arena">
-						${skeletonCard}
-						<div class="vs-badge">VS</div>
-						${skeletonCard}
-					</div>
-				`;
+				arenaEl.innerHTML = `<div class="battle-arena">${card}<div class="vs-badge">VS</div>${card}</div>`;
 				arenaEl.classList.remove('hidden');
 			}
 
-			/**
-			 * @param {PlayerData[]} players
-			 */
 			function render(players) {
 				const [p1, p2] = players;
-				const validPlayers = players.filter(p => !p.error);
+				const bothValid = !p1.error && !p2.error;
 
 				let p1Status = null;
 				let p2Status = null;
 
-				if (validPlayers.length === 2) {
-					if (p1.total > p2.total) {
-						p1Status = 'winner';
-						p2Status = 'loser';
-					} else if (p2.total > p1.total) {
-						p1Status = 'loser';
-						p2Status = 'winner';
-					} else {
-						p1Status = 'tie';
-						p2Status = 'tie';
-					}
-				} else if (p1.error) {
-					p1Status = 'error';
-				} else if (p2.error) {
-					p2Status = 'error';
+				if (bothValid) {
+					if (p1.total > p2.total) { p1Status = 'winner'; p2Status = 'loser'; }
+					else if (p2.total > p1.total) { p1Status = 'loser'; p2Status = 'winner'; }
 				}
 
 				arenaEl.innerHTML = `
 					<div class="battle-arena">
-						${renderPlayerCard(p1, p1Status)}
+						${renderPlayerCard(p1, p1Status, 'slide-left')}
 						<div class="vs-badge">VS</div>
-						${renderPlayerCard(p2, p2Status)}
+						${renderPlayerCard(p2, p2Status, 'slide-right')}
 					</div>
 				`;
 				arenaEl.classList.remove('hidden');
 			}
 
-			/**
-			 * @param {PlayerData[]} players
-			 */
-			function renderResult(players) {
+			function renderWinnerBanner(players) {
 				const valid = players.filter(p => !p.error);
+				bannerEl.classList.remove('hidden');
 
 				if (valid.length < 2) {
 					if (valid.length === 1) {
-						resultEl.textContent = `🏆 ${valid[0].username} wins by default!`;
-						resultEl.className = 'winner-announced';
+						bannerEl.innerHTML = `<div class="banner-text">${valid[0].username} wins by default!</div>`;
 					} else {
-						resultEl.textContent = 'Both players failed to load. Please try again.';
-						resultEl.className = '';
+						bannerEl.innerHTML = `<div class="banner-text">Both players failed to load!</div>`;
 					}
-					resultEl.classList.remove('hidden');
 					return;
 				}
 
 				const [a, b] = valid;
 				if (a.total === b.total) {
-					resultEl.textContent = `🤝 It's a tie! Both have ${a.total.toLocaleString()} contributions.`;
-					resultEl.className = 'tie';
+					bannerEl.innerHTML = `<div class="banner-text">IT'S A TIE! ${a.total.toLocaleString()} each!</div>`;
 				} else {
 					const winner = a.total > b.total ? a : b;
-					const diff = Math.abs(a.total - b.total);
-					resultEl.textContent = `🏆 ${winner.username} wins with ${winner.total.toLocaleString()} contributions! (+${diff.toLocaleString()})`;
-					resultEl.className = 'winner-announced';
+					bannerEl.innerHTML = `<div class="banner-text">${winner.username} WINS!</div>`;
 				}
-				resultEl.classList.remove('hidden');
 			}
 
-			async function handleBattle() {
-				clearAllErrors();
-				resultEl.classList.add('hidden');
+			// ── Battle History ─────────────────────────────────────────────
+			function getHistory() {
+				try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; }
+				catch { return []; }
+			}
 
-				const player1 = normalize(playerInput1.value);
-				const player2 = normalize(playerInput2.value);
+			function saveHistory(entry) {
+				const history = getHistory();
+				history.unshift(entry);
+				if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+				localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+			}
 
-				let hasError = false;
-
-				if (!player1) {
-					showFieldError(playerInput1, playerError1, 'Please enter a username');
-					hasError = true;
+			function renderHistory() {
+				const history = getHistory();
+				if (!history.length) {
+					historySection.classList.add('hidden');
+					return;
 				}
 
-				if (!player2) {
-					showFieldError(playerInput2, playerError2, 'Please enter a username');
+				historySection.classList.remove('hidden');
+				historyList.innerHTML = history.map(h => {
+					const time = new Date(h.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+					return `
+						<div class="history-entry">
+							<span class="history-players">${h.p1.name} (${h.p1.total}) vs ${h.p2.name} (${h.p2.total})</span>
+							<span class="history-winner">${h.winner}</span>
+							<span>${time}</span>
+						</div>
+					`;
+				}).join('');
+			}
+
+			clearHistoryBtn.addEventListener('click', () => {
+				localStorage.removeItem(HISTORY_KEY);
+				renderHistory();
+			});
+
+			renderHistory();
+
+			// ── Share Results ──────────────────────────────────────────────
+			let lastPlayers = null;
+
+			shareBtn.addEventListener('click', async () => {
+				if (!lastPlayers) return;
+				const [a, b] = lastPlayers;
+				let text = `Mona Mayhem Battle Results\n`;
+				text += `${a.username}: ${a.total.toLocaleString()} contributions\n`;
+				text += `${b.username}: ${b.total.toLocaleString()} contributions\n`;
+
+				if (a.error || b.error) {
+					text += `Result: Incomplete battle`;
+				} else if (a.total === b.total) {
+					text += `Result: IT'S A TIE!`;
+				} else {
+					const winner = a.total > b.total ? a : b;
+					text += `Winner: ${winner.username}!`;
+				}
+
+				try {
+					await navigator.clipboard.writeText(text);
+					copyConfirm.textContent = 'Copied to clipboard!';
+					copyConfirm.classList.remove('hidden');
+					setTimeout(() => copyConfirm.classList.add('hidden'), 2000);
+				} catch {
+					copyConfirm.textContent = 'Copy failed';
+					copyConfirm.classList.remove('hidden');
+					setTimeout(() => copyConfirm.classList.add('hidden'), 2000);
+				}
+			});
+
+			// ── Main Battle Handler ───────────────────────────────────────
+			async function handleBattle() {
+				clearError(input1, error1);
+				clearError(input2, error2);
+				bannerEl.classList.add('hidden');
+				shareBtn.classList.add('hidden');
+				copyConfirm.classList.add('hidden');
+
+				const p1 = normalize(input1.value);
+				const p2 = normalize(input2.value);
+				let hasError = false;
+
+				if (!p1 || !isValidUsername(p1)) {
+					showError(input1, error1, p1 ? 'Invalid username' : 'Enter a username');
+					hasError = true;
+				}
+				if (!p2 || !isValidUsername(p2)) {
+					showError(input2, error2, p2 ? 'Invalid username' : 'Enter a username');
 					hasError = true;
 				}
 
 				if (hasError) {
+					playErrorSound();
+					form.classList.add('shake');
+					setTimeout(() => form.classList.remove('shake'), 500);
 					return;
 				}
 
-				setStatus('Fetching contribution data...');
+				playCoinSound();
 				button.disabled = true;
 				button.textContent = 'Battling...';
+				statusEl.textContent = 'Fetching contribution data...';
+				statusEl.className = 'loading';
+
 				renderLoadingSkeleton();
 
-				const usernames = [player1, player2];
-				const results = await Promise.allSettled(usernames.map(fetchPlayer));
+				const [, results] = await Promise.all([
+					playCountdown(),
+					Promise.allSettled([fetchPlayer(p1), fetchPlayer(p2)])
+				]);
 
-				/** @type {PlayerData[]} */
-				const loaded = results.map((result, index) => {
-					if (result.status === 'fulfilled') {
-						return result.value;
-					}
-
+				const players = results.map((result, i) => {
+					if (result.status === 'fulfilled') return result.value;
 					return {
-						username: usernames[index],
+						username: [p1, p2][i],
 						total: 0,
 						from: '',
 						to: '',
@@ -730,37 +1139,42 @@
 					};
 				});
 
-				render(loaded);
-				renderResult(loaded);
-				setStatus('');
+				lastPlayers = players;
+				render(players);
+				renderWinnerBanner(players);
+
+				const anyError = players.some(p => p.error);
+				if (anyError) {
+					playErrorSound();
+				} else {
+					playPowerUpSound();
+				}
+
+				// Save to history
+				const valid = players.filter(p => !p.error);
+				if (valid.length === 2) {
+					const winner = valid[0].total > valid[1].total ? valid[0].username
+						: valid[1].total > valid[0].total ? valid[1].username
+						: 'Tie';
+					saveHistory({
+						p1: { name: valid[0].username, total: valid[0].total },
+						p2: { name: valid[1].username, total: valid[1].total },
+						winner,
+						time: Date.now(),
+					});
+					renderHistory();
+				}
+
+				shareBtn.classList.remove('hidden');
+				statusEl.className = 'hidden';
 				button.disabled = false;
-				button.textContent = 'Battle';
+				button.textContent = 'Battle!';
 			}
 
-			// Form submission
-			form.addEventListener('submit', (event) => {
-				event.preventDefault();
+			form.addEventListener('submit', (e) => {
+				e.preventDefault();
 				handleBattle();
 			});
-
-			// Enter key in inputs
-			playerInput1.addEventListener('keydown', (event) => {
-				if (event.key === 'Enter') {
-					event.preventDefault();
-					handleBattle();
-				}
-			});
-
-			playerInput2.addEventListener('keydown', (event) => {
-				if (event.key === 'Enter') {
-					event.preventDefault();
-					handleBattle();
-				}
-			});
-
-			// Clear errors on input
-			playerInput1.addEventListener('input', () => clearFieldError(playerInput1, playerError1));
-			playerInput2.addEventListener('input', () => clearFieldError(playerInput2, playerError2));
 		</script>
 	</body>
 </html>
