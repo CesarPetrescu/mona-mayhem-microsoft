@@ -862,7 +862,6 @@
 
 						<section id="battle-result">
 							<canvas id="fight-stage" class="hidden"></canvas>
-							<canvas id="battle-canvas" class="hidden"></canvas>
 							<div id="arena" class="hidden"></div>
 							<div id="winner-banner" class="hidden"></div>
 							<button id="share-btn" class="hidden">$ copy-results</button>
@@ -1409,6 +1408,9 @@
 			}
 
 			function initFighters(color1, color2) {
+				// Must unhide BEFORE measuring dimensions
+				stageCanvas.classList.remove('hidden');
+
 				const dpr = window.devicePixelRatio || 1;
 				const rect = stageCanvas.getBoundingClientRect();
 				stageCanvas.width = rect.width * dpr;
@@ -1422,7 +1424,6 @@
 
 				figureL = new StickFigure(W * 0.2, groundY, color1, 1);
 				figureR = new StickFigure(W * 0.8, groundY, color2, -1);
-				stageCanvas.classList.remove('hidden');
 
 				// Ground line
 				function drawGround() {
@@ -1719,6 +1720,16 @@
 
 				await logStatus('data received. rendering combat zone...');
 				render(players);
+
+				// Init stick fighters
+				const bothOk = !players[0].error && !players[1].error;
+				if (bothOk) {
+					const c1 = players[0].colors[3] || '#33ff66';
+					const c2 = players[1].colors[3] || '#a855f7';
+					initFighters(c1, c2);
+					figureL.label = players[0].username;
+					figureR.label = players[1].username;
+				}
 
 				await logStatus('initiating commit cannon sequence...');
 				await runBattleAnimation(players);
